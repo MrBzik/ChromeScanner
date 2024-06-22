@@ -20,5 +20,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Chromium Backups"
-include(":app")
- 
+include(":server")
+include(":client")
