@@ -18,7 +18,7 @@ fun Application.module(){
 
     routing {
         get("/api/test") {
-            call.respond(HttpStatusCode.OK, "SUPER SUPER SUPER SUCCESS")
+            call.respond(HttpStatusCode.OK, "S U C C E S S")
         }
     }
 

@@ -1,15 +1,22 @@
 package com.solid.server
 
+import android.Manifest
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.core.app.ActivityCompat
 import com.solid.server.filestree.FileTreeScan
 import com.solid.server.filestree.TreeNode
 import com.solid.server.shell.ChromeFilesScanner
@@ -25,8 +32,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-//        embeddedServer(factory = CIO, port = 8080, module = Application::module).start()
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0
+            )
+        }
 
         val scanner: ChromeFilesScanner = ChromeFileScannerWuImpl(this.applicationContext)
 
@@ -34,8 +45,26 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ChromiumBackupsTheme {
-                Box (modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
-                    Text(text = "Hello Server!")
+                
+                Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceEvenly, horizontalAlignment = Alignment.CenterHorizontally) {
+                    
+                    Button(onClick = {
+                        Intent(applicationContext, ScanningService::class.java).also {
+                            it.action = ServiceActions.START.toString()
+                            startService(it)
+                        }
+                    }) {
+                        Text(text = "START")
+                    }
+
+                    Button(onClick = {
+                        Intent(applicationContext, ScanningService::class.java).also {
+                            it.action = ServiceActions.STOP.toString()
+                            startService(it)
+                        }
+                    }) {
+                        Text(text = "STOP")
+                    }
                 }
             }
         }
