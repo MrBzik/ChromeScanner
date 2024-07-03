@@ -8,6 +8,9 @@ espressoCore = "3.5.1"
 lifecycleRuntimeKtx = "2.8.2"
 activityCompose = "1.9.0"
 composeBom = "2023.08.00"
+ktor = "2.3.12"
+json = "1.6.3"
+libsu = "6.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -24,8 +27,15 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+ktor-server-core = { group = "io.ktor", name ="ktor-server-core", version.ref = "ktor"}
+ktor-server-cio = { group = "io.ktor", name = "ktor-server-cio", version.ref = "ktor"}
+ktor-server-content-negotiation = { group = "io.ktor", name = "ktor-server-content-negotiation", version.ref = "ktor"}
+ktor-serialization-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor"}
+kotlin-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref ="json"}
+libsu-core = { group = "com.github.topjohnwu.libsu", name = "core", version.ref = "libsu"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-
+ktor-plugin = {id = "io.ktor.plugin", version.ref = "ktor"}
+serialization = {id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin"}

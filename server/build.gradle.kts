@@ -1,11 +1,16 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+//    alias(libs.plugins.ktor.plugin)
+    alias(libs.plugins.serialization)
 }
+
 
 android {
     namespace = "com.solid.server"
     compileSdk = 34
+
+
 
     defaultConfig {
         applicationId = "com.solid.server"
@@ -66,4 +71,16 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+
+    //ktor
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.cio)
+    implementation(libs.kotlin.serialization)
+    implementation(libs.ktor.serialization.json)
+    implementation(libs.ktor.server.content.negotiation)
+
+
+    //LIBSU
+    implementation(libs.libsu.core)
 }
