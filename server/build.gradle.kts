@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
 //    alias(libs.plugins.ktor.plugin)
     alias(libs.plugins.serialization)
+    alias(libs.plugins.kotlinAndroidKsp)
+    alias(libs.plugins.hiltAndroid)
 }
 
 
@@ -83,4 +85,10 @@ dependencies {
 
     //LIBSU
     implementation(libs.libsu.core)
+
+
+    //HILT
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+
 }

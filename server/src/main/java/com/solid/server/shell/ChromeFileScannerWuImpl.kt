@@ -94,6 +94,8 @@ class ChromeFileScannerWuImpl (private val app: Context) : ChromeFilesScanner {
 
         fileTreeGenRes?.let {
 
+            lastFilesTree = it.fileTreeScan
+
             val id = scanTimeStamp.toString()
 
             archiveFileSystem(id, fileTreeGenRes)
