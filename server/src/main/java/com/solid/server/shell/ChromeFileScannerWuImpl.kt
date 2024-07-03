@@ -51,9 +51,9 @@ class ChromeFileScannerWuImpl (private val app: Context) : ChromeFilesScanner {
             lastFilesTree = Json.decodeFromString<FileTreeScan>(lastTreeFile.readText())
         }
 
-        lastFilesTree?.let {
-            FilesTreeUtils.printTree(it.root)
-        }
+//        lastFilesTree?.let {
+//            FilesTreeUtils.printTree(it.root)
+//        }
 
 
     }

@@ -1,6 +1,8 @@
 package com.solid.server.di
 
 import android.content.Context
+import com.solid.server.data.local.database.ScansDB
+import com.solid.server.data.local.database.SqLightDb
 import com.solid.server.shell.ChromeFileScannerWuImpl
 import com.solid.server.shell.ChromeFilesScanner
 import dagger.Module
@@ -21,5 +23,10 @@ object ServiceModule {
         return ChromeFileScannerWuImpl(app)
     }
 
+    @Provides
+    @ServiceScoped
+    fun providesScansDB(@ApplicationContext app : Context) : ScansDB {
+        return SqLightDb(app)
+    }
 
 }

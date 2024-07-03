@@ -5,6 +5,9 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import com.solid.server.data.local.database.ScansDB
+import com.solid.server.data.local.database.SqLightDb
+import com.solid.server.data.local.database.entities.Archive
 import com.solid.server.shell.ChromeFilesScanner
 import com.solid.server.utils.Logger
 import dagger.hilt.android.AndroidEntryPoint
@@ -19,6 +22,9 @@ class ScanningService : Service() {
 
     @Inject
     lateinit var fileScanner : ChromeFilesScanner
+
+    @Inject
+    lateinit var scansDB: ScansDB
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -64,8 +70,10 @@ class ScanningService : Service() {
 
         embeddedServer(factory = CIO, port = 8080, module = Application::module).start()
 
-        fileScanner.launchScan()
+//        fileScanner.launchScan()
 
+        val arch = scansDB.getLastArchive()
+        Logger.log(arch.toString())
 
     }
 
