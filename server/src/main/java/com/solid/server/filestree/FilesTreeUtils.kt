@@ -1,5 +1,8 @@
 package com.solid.server.filestree
 
+import com.solid.dto.FileStatus
+import com.solid.dto.FileTreeScan
+import com.solid.dto.TreeNode
 import com.solid.server.utils.Logger
 
 
@@ -138,8 +141,7 @@ object FilesTreeUtils {
 
         if(tree.nodes == null) return
 
-
-        tree.nodes.forEach { (t, u) ->
+        tree.nodes!!.forEach { (t, u) ->
 
             Logger.log(if(u.isFile) "$t file" else t)
 

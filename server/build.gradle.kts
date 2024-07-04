@@ -93,4 +93,7 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
+    //DTO
+    implementation(project(":dto"))
+
 }

@@ -23,3 +23,4 @@ dependencyResolutionManagement {
 rootProject.name = "Chromium Backups"
 include(":server")
 include(":client")
+include(":dto")

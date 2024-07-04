@@ -1,5 +1,6 @@
 package com.solid.server
 
+import com.solid.dto.ClientCommands
 import com.solid.server.utils.Logger
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
@@ -16,6 +17,7 @@ import io.ktor.server.websocket.timeout
 import io.ktor.server.websocket.webSocket
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
+import kotlinx.serialization.json.Json
 import java.time.Duration
 
 fun Application.module(){
@@ -45,8 +47,17 @@ fun Application.module(){
             send(Frame.Text("Hello client"))
             for (frame in incoming) {
                 frame as? Frame.Text ?: continue
-                val receivedText = frame.readText()
-                Logger.log(receivedText)
+                Logger.log(frame.readText())
+                val testClass = Json.decodeFromString<ClientCommands>(frame.readText())
+
+                Logger.log("GOT HERE")
+               when(testClass){
+                   is ClientCommands.RecoverFileSystem -> Logger.log("Recovering: ${testClass.fileSystemID}")
+                   is ClientCommands.StartScan -> Logger.log("START SCAN")
+                   is ClientCommands.StopScan -> Logger.log("STOP SCAN")
+               }
+
+
             }
 
         }

@@ -1,8 +1,7 @@
 package com.solid.server.shell
 
 import android.content.Context
-import android.util.Log
-import com.solid.server.filestree.FileTreeScan
+import com.solid.dto.FileTreeScan
 import com.solid.server.filestree.FilesTreeUtils
 import com.solid.server.filestree.FilesTreeUtils.SEPARATOR
 import com.solid.server.filestree.GenFileTreeResults

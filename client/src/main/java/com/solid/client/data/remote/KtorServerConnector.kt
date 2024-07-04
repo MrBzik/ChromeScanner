@@ -1,5 +1,6 @@
 package com.solid.client.data.remote
 
+import com.solid.dto.ClientCommands
 import com.solid.server.utils.Logger
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.webSocket
@@ -12,6 +13,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class KtorServerConnector(private val client: HttpClient) : ServerConnector {
 
@@ -21,15 +24,15 @@ class KtorServerConnector(private val client: HttpClient) : ServerConnector {
 
     override suspend fun establishConnection() {
 
-//        socket = client.webSocketSession(method = HttpMethod.Get, host = "10.0.2.2", port = 12345)
-
-//        client.webSocket(method = HttpMethod.Get, host = "10.0.2.2", port = 12345){
-//
-//        }
+        socket = client.webSocketSession(method = HttpMethod.Get, host = "10.0.2.2", port = 12345, path = "/connect")
 
         if(socket?.isActive == true){
 
-            socket?.send(Frame.Text("hello server"))
+            val command = Json.encodeToString(ClientCommands.serializer() , ClientCommands.RecoverFileSystem("123"))
+
+            Logger.log(command)
+
+            socket?.send(Frame.Text(command))
 
             socket?.incoming?.consumeEach {
 

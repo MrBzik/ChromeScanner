@@ -1,4 +1,4 @@
-package com.solid.server.filestree
+package com.solid.dto
 
 import kotlinx.serialization.Serializable
 
