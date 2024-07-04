@@ -1,5 +1,7 @@
 package com.solid.client.di
 
+import com.solid.client.data.remote.KtorServerConnector
+import com.solid.client.data.remote.ServerConnector
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,6 +28,13 @@ object AppModule {
                 json()
             }
         }
+    }
+
+
+    @Provides
+    @Singleton
+    fun provideServerConnector(client: HttpClient) : ServerConnector {
+        return KtorServerConnector(client)
     }
 
 
