@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
-//    alias(libs.plugins.ktor.plugin)
     alias(libs.plugins.serialization)
     alias(libs.plugins.kotlinAndroidKsp)
     alias(libs.plugins.hiltAndroid)
@@ -16,7 +15,7 @@ android {
 
     defaultConfig {
         applicationId = "com.solid.server"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -78,9 +77,12 @@ dependencies {
     //ktor
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.cio)
-    implementation(libs.kotlin.serialization)
     implementation(libs.ktor.serialization.json)
     implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.server.websockets)
+
+    //Serialization
+    implementation(libs.kotlin.serialization)
 
 
     //LIBSU

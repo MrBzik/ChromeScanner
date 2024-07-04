@@ -6,8 +6,6 @@ import android.content.Intent
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.solid.server.data.local.database.ScansDB
-import com.solid.server.data.local.database.SqLightDb
-import com.solid.server.data.local.database.entities.Archive
 import com.solid.server.shell.ChromeFilesScanner
 import com.solid.server.utils.Logger
 import dagger.hilt.android.AndroidEntryPoint
@@ -68,14 +66,17 @@ class ScanningService : Service() {
     override fun onCreate() {
         super.onCreate()
 
-        embeddedServer(factory = CIO, port = 8080, module = Application::module).start()
+        embeddedServer(factory = CIO, port = 23456, module = Application::module).start()
+
 
 //        fileScanner.launchScan()
 
-        val arch = scansDB.getLastArchive()
-        Logger.log(arch.toString())
+//        val arch = scansDB.getLastArchive()
+//        Logger.log(arch.toString())
 
     }
+
+
 
 
 }
