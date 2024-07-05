@@ -2,11 +2,13 @@ package com.solid.server.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.solid.server.utils.PORT_CONFIG
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Named
 import javax.inject.Singleton
 
 
@@ -17,6 +19,7 @@ object AppModule {
 
     @Provides
     @Singleton
+    @Named(PORT_CONFIG)
     fun providePortConfigSharedPrefs(
         @ApplicationContext app : Context
     ) : SharedPreferences {

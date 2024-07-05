@@ -13,8 +13,8 @@ import com.solid.dto.ServerResponses
 import com.solid.server.R
 import com.solid.server.data.local.database.ScansDB
 import com.solid.server.data.remote.ScanServer
-import com.solid.server.shell.ChromeFilesScanner
-import com.solid.server.utils.Logger
+import com.solid.server.filesarchiver.ChromeFilesArchiver
+import com.solid.server.filescanner.ChromeFilesScanner
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +22,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.io.File
 import javax.inject.Inject
@@ -36,6 +37,8 @@ class ScanningService : Service() {
     lateinit var scansDB: ScansDB
     @Inject
     lateinit var scanServer: ScanServer
+    @Inject
+    lateinit var fileArchiver: ChromeFilesArchiver
 
     private var isServiceRunning = false
     private var isClientConnected = false
@@ -90,7 +93,7 @@ class ScanningService : Service() {
         super.onCreate()
 // adb forward tcp:12345 tcp:23456
 
-//        scansDB.deleteAllRows()
+        scansDB.deleteAllRows()
 
         serviceScope.launch {
             scanServer.startServer()
@@ -99,8 +102,10 @@ class ScanningService : Service() {
         observeClientCommands()
 
         observeIsClientConnected()
-    }
 
+
+
+    }
 
 
     override fun onDestroy() {
@@ -118,13 +123,17 @@ class ScanningService : Service() {
 
                 when(command){
                     is ClientCommands.RecoverFileSystem -> {
-                        Logger.log("ID IS : ${command.fileSystemID}")
+                        val success = fileArchiver.restoreFileSystemFromArchive(command.fileSystemID)
+                        if(success){
+                            fileScanner.notifyFileSystemChanged(command.fileSystemID)
+                        }
                     }
                     is ClientCommands.StartScan -> {
                         isToRunScanning = true
                         launch {
                             startScanning(command.intervalSec)
                         }
+
                     }
                     is ClientCommands.StopScan -> {
                         isToRunScanning = false
@@ -135,7 +144,7 @@ class ScanningService : Service() {
     }
 
 
-    private suspend fun startScanning(intervalSec : Int){
+    private suspend fun startScanning(intervalSec : Int) {
 
         val delay = intervalSec * 1000L
 
@@ -145,13 +154,14 @@ class ScanningService : Service() {
 
             fileScanner.launchScan()?.let {  scanRes ->
 
-                scansDB.addArchive(scanRes.archive)
-
-                val responseObj = ServerResponses.NewScan(scanRes.treeScan)
-
-                val responseJson = Json.encodeToString(ServerResponses.serializer(), responseObj)
-
-                scanServer.sendJsonResponseToClient(responseJson)
+                serviceScope.launch {
+                    fileArchiver.archiveFileSystem(scanRes)
+                }
+                serviceScope.launch {
+                    val responseObj = ServerResponses.NewScan(scanRes.fileTreeScan)
+                    val responseJson = Json.encodeToString(ServerResponses.serializer(), responseObj)
+                    scanServer.sendJsonResponseToClient(responseJson)
+                }
             }
         }
     }

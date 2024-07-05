@@ -16,6 +16,6 @@ sealed interface ClientCommands {
 
     @Serializable
     @SerialName("recovery")
-    data class RecoverFileSystem (val fileSystemID : String) : ClientCommands
+    data class RecoverFileSystem (val fileSystemID : Long) : ClientCommands
 
 }

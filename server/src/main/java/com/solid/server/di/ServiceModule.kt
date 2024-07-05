@@ -6,24 +6,43 @@ import com.solid.server.data.local.database.ScansDB
 import com.solid.server.data.local.database.SqLightDb
 import com.solid.server.data.remote.KtorServer
 import com.solid.server.data.remote.ScanServer
-import com.solid.server.shell.ChromeFileScannerWuImpl
-import com.solid.server.shell.ChromeFilesScanner
+import com.solid.server.filesarchiver.ChromeFilesArchiver
+import com.solid.server.filesarchiver.ChromeFilesArchiverImpl
+import com.solid.server.filescanner.ChromeFileScannerImpl
+import com.solid.server.filescanner.ChromeFilesScanner
+import com.solid.server.shell.ShellHelper
+import com.solid.server.shell.TopWuShell
+import com.solid.server.utils.CURRENT_FILE_SYS
+import com.solid.server.utils.PORT_CONFIG
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ServiceComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ServiceScoped
+import javax.inject.Named
+import javax.inject.Singleton
 
 
 @Module
 @InstallIn(ServiceComponent::class)
 object ServiceModule {
 
+
     @Provides
     @ServiceScoped
-    fun providesFileScanner(@ApplicationContext app : Context) : ChromeFilesScanner {
-        return ChromeFileScannerWuImpl(app)
+    fun providesShellHelper() : ShellHelper {
+        return TopWuShell()
+    }
+
+    @Provides
+    @ServiceScoped
+    fun providesFileScanner(
+        shellHelper: ShellHelper,
+        @Named(CURRENT_FILE_SYS) fileSysPref: SharedPreferences,
+        db : ScansDB
+    ) : ChromeFilesScanner {
+        return ChromeFileScannerImpl(shellHelper, fileSysPref, db)
     }
 
     @Provides
@@ -34,8 +53,33 @@ object ServiceModule {
 
     @Provides
     @ServiceScoped
-    fun providesScanServer(portConfPref : SharedPreferences) : ScanServer {
+    fun providesScanServer(@Named(PORT_CONFIG) portConfPref : SharedPreferences) : ScanServer {
         return KtorServer(portConfPref)
+    }
+
+    @Provides
+    @ServiceScoped
+    @Named(CURRENT_FILE_SYS)
+    fun providePortConfigSharedPrefs(
+        @ApplicationContext app : Context
+    ) : SharedPreferences {
+        return app.getSharedPreferences("current_file_system", Context.MODE_PRIVATE)
+    }
+
+
+
+    @Provides
+    @ServiceScoped
+    fun providesFileArchiver(
+        @ApplicationContext app : Context,
+        shellHelper: ShellHelper,
+        scansDb: ScansDB,
+        @Named(CURRENT_FILE_SYS) fileSysPref: SharedPreferences
+    ) : ChromeFilesArchiver {
+
+        return ChromeFilesArchiverImpl(
+            app, shellHelper, scansDb, fileSysPref
+        )
     }
 
 

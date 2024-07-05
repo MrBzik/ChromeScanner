@@ -42,15 +42,18 @@ class KtorServerConnector(private val client: HttpClient) : ServerConnector {
                     }
                     is ServerResponses.NewScan -> {
 
-                        printTree(
-                            responseObj.scan.root
-                        )
+//                        printTree(
+//                            responseObj.scan.root
+//                        )
 
                     }
                     is ServerResponses.ScanRecoveryResults -> {
 
+
                     }
                     is ServerResponses.ScansList -> {
+
+                        Logger.log("GOT: ${responseObj.scansList.size}")
 
                     }
                 }

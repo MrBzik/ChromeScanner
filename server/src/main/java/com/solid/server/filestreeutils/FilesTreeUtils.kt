@@ -1,12 +1,12 @@
-package com.solid.server.filestree
+package com.solid.server.filestreeutils
 
 import com.solid.dto.FileStatus
 import com.solid.dto.FileTreeScan
 import com.solid.dto.TreeNode
+import com.solid.server.filescanner.ChromeFilesScanner
 import com.solid.server.utils.Logger
 
 
-data class GenFileTreeResults(val fileTreeScan: FileTreeScan, val allPaths: Set<String>)
 
 object FilesTreeUtils {
 
@@ -17,7 +17,7 @@ object FilesTreeUtils {
         filesList: List<String>,
         scanTimeStamp: Long,
         scanTimeMills: Long
-    ) : GenFileTreeResults? {
+    ) : ChromeFilesScanner.ScanResults? {
 
         val forArchive = HashSet<String>()
 
@@ -62,14 +62,15 @@ object FilesTreeUtils {
         Logger.log(forArchive.size.toString())
 
         if(isTreeChanged){
-            return GenFileTreeResults(
+            return ChromeFilesScanner.ScanResults(
                 fileTreeScan = FileTreeScan(
                     root = rootTreeNode,
                     scanTimeStamp = scanTimeStamp,
                     scanTimeMills = scanTimeMills,
                     totalByteSize = totalByteSize
                 ),
-                allPaths = forArchive
+                allPaths = forArchive,
+                id = scanTimeStamp
             )
         }
 
