@@ -25,7 +25,7 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".ScanningService"
+            android:name=".service.ScanningService"
             android:foregroundServiceType="shortService"
             />
     </application>

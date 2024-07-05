@@ -1,26 +1,27 @@
-package com.solid.server
+package com.solid.server.service
 
 import android.app.ActivityManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.os.Debug
-import android.os.Debug.MemoryInfo
 import android.os.IBinder
 import android.os.Process
 import androidx.core.app.NotificationCompat
+import com.solid.dto.ClientCommands
+import com.solid.server.R
 import com.solid.server.data.local.database.ScansDB
+import com.solid.server.data.remote.ScanServer
 import com.solid.server.shell.ChromeFilesScanner
 import com.solid.server.utils.Logger
 import dagger.hilt.android.AndroidEntryPoint
-import io.ktor.server.application.Application
-import io.ktor.server.cio.CIO
-import io.ktor.server.engine.embeddedServer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -29,17 +30,22 @@ class ScanningService : Service() {
 
     @Inject
     lateinit var fileScanner : ChromeFilesScanner
-
     @Inject
     lateinit var scansDB: ScansDB
+    @Inject
+    lateinit var scanServer: ScanServer
+
+    private var isServiceRunning = false
+
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
 
+    private val serviceJob = SupervisorJob()
+    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
 
         when(intent?.action){
 
@@ -58,7 +64,9 @@ class ScanningService : Service() {
 
     private fun start(){
 
-//        checkMemoryUsage()
+        if(isServiceRunning) return
+
+        isServiceRunning = true
 
         val stopIntent = PendingIntent.getService(this, 1, Intent(this, ScanningService::class.java).also {
             it.action = ServiceActions.STOP.toString()
@@ -72,22 +80,53 @@ class ScanningService : Service() {
             .build()
         startForeground(1, notification)
 
-
     }
 
 
     override fun onCreate() {
         super.onCreate()
 // adb forward tcp:12345 tcp:23456
-        embeddedServer(factory = CIO, port = 23456, module = Application::module).start()
 
+        serviceScope.launch {
+            scanServer.startServer()
+        }
 
-//        fileScanner.launchScan()
-
-//        val arch = scansDB.getLastArchive()
-//        Logger.log(arch.toString())
+        serviceScope.launch {
+            observeClientCommands()
+        }
 
     }
+
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+        isServiceRunning = false
+        serviceJob.cancel()
+    }
+
+
+    private suspend fun observeClientCommands(){
+
+        scanServer.clientCommands.collect { command ->
+
+            when(command){
+                is ClientCommands.RecoverFileSystem -> {
+                    Logger.log("ID IS : ${command.fileSystemID}")
+                }
+                is ClientCommands.StartScan -> {
+
+                }
+                is ClientCommands.StopScan -> {
+
+                }
+            }
+        }
+
+
+
+    }
+
 
 
     private fun checkMemoryUsage(){

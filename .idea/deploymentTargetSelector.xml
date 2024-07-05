@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="client">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-07-04T12:56:59.320551800Z">
+        <DropdownSelection timestamp="2024-07-05T10:18:30.843874600Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Nazar\.android\avd\Pixel_5_API_27.avd" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Nazar\.android\avd\Pixel_26.avd" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -26,10 +26,10 @@
       </SelectionState>
       <SelectionState runConfigName="server">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-07-04T13:08:02.678179800Z">
+        <DropdownSelection timestamp="2024-07-05T10:17:58.426203100Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Nazar\.android\avd\Pixel_5_API_27.avd" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Nazar\.android\avd\Nexus_6_API_32.avd" />
             </handle>
           </Target>
         </DropdownSelection>

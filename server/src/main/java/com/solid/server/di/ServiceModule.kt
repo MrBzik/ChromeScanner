@@ -1,8 +1,11 @@
 package com.solid.server.di
 
 import android.content.Context
+import android.content.SharedPreferences
 import com.solid.server.data.local.database.ScansDB
 import com.solid.server.data.local.database.SqLightDb
+import com.solid.server.data.remote.KtorServer
+import com.solid.server.data.remote.ScanServer
 import com.solid.server.shell.ChromeFileScannerWuImpl
 import com.solid.server.shell.ChromeFilesScanner
 import dagger.Module
@@ -28,5 +31,12 @@ object ServiceModule {
     fun providesScansDB(@ApplicationContext app : Context) : ScansDB {
         return SqLightDb(app)
     }
+
+    @Provides
+    @ServiceScoped
+    fun providesScanServer(portConfPref : SharedPreferences) : ScanServer {
+        return KtorServer(portConfPref)
+    }
+
 
 }

@@ -15,6 +15,9 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
+import com.solid.server.service.CONFIG_PORT
+import com.solid.server.service.ScanningService
+import com.solid.server.service.ServiceActions
 import com.solid.server.ui.theme.ChromiumBackupsTheme
 
 class MainActivity : ComponentActivity() {

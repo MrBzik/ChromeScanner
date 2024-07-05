@@ -28,12 +28,6 @@ class KtorServerConnector(private val client: HttpClient) : ServerConnector {
 
         if(socket?.isActive == true){
 
-            val command = Json.encodeToString(ClientCommands.serializer() , ClientCommands.RecoverFileSystem("123"))
-
-            Logger.log(command)
-
-            socket?.send(Frame.Text(command))
-
             socket?.incoming?.consumeEach {
 
                 val othersMessage = it as? Frame.Text
@@ -45,6 +39,8 @@ class KtorServerConnector(private val client: HttpClient) : ServerConnector {
     }
 
     override suspend fun startScanning() {
+
+        Logger.log("IS SOCKET ACTIVE: ${socket?.isActive}")
 
     }
 

@@ -1,4 +1,4 @@
-package com.solid.server
+package com.solid.server.service
 
 enum class ServiceActions {
 

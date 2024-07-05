@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.solid.client.data.remote.ServerConnector
 import com.solid.server.utils.Logger
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -16,10 +17,19 @@ class MainVM @Inject constructor(
 
 
 
-    fun initializeConnection() = viewModelScope.launch {
+    fun initializeConnection() {
 
-        serverConnector.establishConnection()
 
+        viewModelScope.launch {
+            serverConnector.establishConnection()
+        }
+
+        viewModelScope.launch {
+            while (true){
+                delay(2000)
+                serverConnector.startScanning()
+            }
+        }
     }
 
 
