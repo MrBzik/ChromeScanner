@@ -2,6 +2,8 @@ package com.solid.server.shell
 
 import android.content.Context
 import com.solid.dto.FileTreeScan
+import com.solid.dto.ServerResponses
+import com.solid.server.data.local.database.entities.Archive
 import com.solid.server.filestree.FilesTreeUtils
 import com.solid.server.filestree.FilesTreeUtils.SEPARATOR
 import com.solid.server.filestree.GenFileTreeResults
@@ -10,6 +12,7 @@ import com.topjohnwu.superuser.Shell
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
+import kotlin.math.atan
 
 class ChromeFileScannerWuImpl (private val app: Context) : ChromeFilesScanner {
 
@@ -50,11 +53,6 @@ class ChromeFileScannerWuImpl (private val app: Context) : ChromeFilesScanner {
             lastFilesTree = Json.decodeFromString<FileTreeScan>(lastTreeFile.readText())
         }
 
-//        lastFilesTree?.let {
-//            FilesTreeUtils.printTree(it.root)
-//        }
-
-
     }
 
     private fun setupShell(){
@@ -64,7 +62,10 @@ class ChromeFileScannerWuImpl (private val app: Context) : ChromeFilesScanner {
     }
 
 
-    override fun launchScan(): String? {
+    override fun launchScan(): ChromeFilesScanner.ScanRes? {
+
+        Logger.log("LAUNCHING SCAN")
+
 
         val scanTimeStamp = System.currentTimeMillis()
 
@@ -95,22 +96,23 @@ class ChromeFileScannerWuImpl (private val app: Context) : ChromeFilesScanner {
 
             lastFilesTree = it.fileTreeScan
 
-            val id = scanTimeStamp.toString()
-
-            archiveFileSystem(id, fileTreeGenRes)
-
-            return id
+            return ChromeFilesScanner.ScanRes(
+                archive = archiveFileSystem(scanTimeMills, fileTreeGenRes),
+                treeScan = it.fileTreeScan
+            )
         }
 
         return null
     }
 
 
-    private fun archiveFileSystem(id : String, fileTreeGenRes: GenFileTreeResults){
+    private fun archiveFileSystem(id : Long, fileTreeGenRes: GenFileTreeResults) : Archive {
 
         Logger.log("ARCHIVING")
 
-        val filesTreeJson = Json.encodeToString(fileTreeGenRes.fileTreeScan)
+        val newScan = ServerResponses.NewScan(fileTreeGenRes.fileTreeScan)
+
+        val filesTreeJson = Json.encodeToString(newScan)
 
         val filePath = treesDir.path + "/" + id + ".json"
 
@@ -135,6 +137,10 @@ class ChromeFileScannerWuImpl (private val app: Context) : ChromeFilesScanner {
 //        }
 //
 //        Logger.log(res.isSuccess.toString())
+
+
+        return Archive(id = id, filesTreePath = filePath, filesArchivePath = archivePath)
+
     }
 
 

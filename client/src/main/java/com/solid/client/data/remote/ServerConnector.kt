@@ -5,7 +5,7 @@ interface ServerConnector {
 
     suspend fun establishConnection()
 
-    suspend fun startScanning()
+    suspend fun startScanning(intervalsSec: Int)
 
     suspend fun stopScanning()
 

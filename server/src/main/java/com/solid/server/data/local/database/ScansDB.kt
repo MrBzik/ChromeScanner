@@ -13,4 +13,6 @@ interface ScansDB {
 
     fun getLastArchive() : Archive?
 
+    fun deleteAllRows()
+
 }

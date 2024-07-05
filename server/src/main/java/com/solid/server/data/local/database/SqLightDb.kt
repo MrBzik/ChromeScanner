@@ -58,6 +58,16 @@ class SqLightDb(app: Context) : SQLiteOpenHelper(app, DB_NAME, null , DB_VERSION
         return handleQuery(query)
     }
 
+
+    override fun deleteAllRows() {
+
+        val query = "DELETE FROM $TABLE_NAME"
+
+        val db = this.writableDatabase
+        db.execSQL(query)
+
+    }
+
     override fun getArchiveById(id : Long) : Archive? {
 
         val query = "SELECT * FROM $TABLE_NAME WHERE $ID = $id"

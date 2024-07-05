@@ -136,20 +136,5 @@ object FilesTreeUtils {
         return status
 
     }
-
-    fun printTree(tree: TreeNode){
-
-        if(tree.nodes == null) return
-
-        tree.nodes!!.forEach { (t, u) ->
-
-            Logger.log(if(u.isFile) "$t file" else t)
-
-            printTree(u)
-
-        }
-    }
-
-
 }
 

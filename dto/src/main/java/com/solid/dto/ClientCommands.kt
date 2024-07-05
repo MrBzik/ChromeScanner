@@ -8,7 +8,7 @@ sealed interface ClientCommands {
 
     @Serializable
     @SerialName("start")
-    data object StartScan : ClientCommands
+    data class StartScan(val intervalSec: Int) : ClientCommands
 
     @Serializable
     @SerialName("stop")

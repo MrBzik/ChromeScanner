@@ -1,6 +1,8 @@
 package com.solid.client.data.remote
 
+import com.solid.client.fileutils.printTree
 import com.solid.dto.ClientCommands
+import com.solid.dto.ServerResponses
 import com.solid.server.utils.Logger
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.webSocket
@@ -28,19 +30,47 @@ class KtorServerConnector(private val client: HttpClient) : ServerConnector {
 
         if(socket?.isActive == true){
 
-            socket?.incoming?.consumeEach {
+            socket?.incoming?.consumeEach { frame ->
 
-                val othersMessage = it as? Frame.Text
+                if (frame !is Frame.Text) return@consumeEach
 
-                Logger.log(othersMessage?.readText() ?: "NO MESSAGE")
+                val responseObj = Json.decodeFromString<ServerResponses>(frame.readText())
+
+                when(responseObj){
+                    is ServerResponses.MemoryStatus -> {
+                        Logger.log("using: ${responseObj.memoryUsageKb}, available: ${responseObj.availableRamKb}")
+                    }
+                    is ServerResponses.NewScan -> {
+
+                        printTree(
+                            responseObj.scan.root
+                        )
+
+                    }
+                    is ServerResponses.ScanRecoveryResults -> {
+
+                    }
+                    is ServerResponses.ScansList -> {
+
+                    }
+                }
 
             }
         }
     }
 
-    override suspend fun startScanning() {
+    override suspend fun startScanning(intervalsSec: Int) {
 
-        Logger.log("IS SOCKET ACTIVE: ${socket?.isActive}")
+        if (socket?.isActive == false) return
+
+        val command = ClientCommands.StartScan(intervalsSec)
+
+        val json = Json.encodeToString(ClientCommands.serializer(), command)
+
+        socket?.send(Frame.Text(json))
+
+
+//        Logger.log("IS SOCKET ACTIVE: ${socket?.isActive}")
 
     }
 
@@ -49,6 +79,14 @@ class KtorServerConnector(private val client: HttpClient) : ServerConnector {
     }
 
     override suspend fun recoverFileSystem(id: String) {
+
+        if (socket?.isActive == false) return
+
+        val command = ClientCommands.RecoverFileSystem(id)
+
+        val json = Json.encodeToString(ClientCommands.serializer(), command)
+
+        socket?.send(Frame.Text(json))
 
     }
 }

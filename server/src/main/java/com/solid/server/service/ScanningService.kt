@@ -9,6 +9,7 @@ import android.os.IBinder
 import android.os.Process
 import androidx.core.app.NotificationCompat
 import com.solid.dto.ClientCommands
+import com.solid.dto.ServerResponses
 import com.solid.server.R
 import com.solid.server.data.local.database.ScansDB
 import com.solid.server.data.remote.ScanServer
@@ -18,10 +19,11 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
+import kotlinx.serialization.json.Json
+import java.io.File
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -36,7 +38,8 @@ class ScanningService : Service() {
     lateinit var scanServer: ScanServer
 
     private var isServiceRunning = false
-
+    private var isClientConnected = false
+    private var isToRunScanning = false
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -87,14 +90,15 @@ class ScanningService : Service() {
         super.onCreate()
 // adb forward tcp:12345 tcp:23456
 
+//        scansDB.deleteAllRows()
+
         serviceScope.launch {
             scanServer.startServer()
         }
 
-        serviceScope.launch {
-            observeClientCommands()
-        }
+        observeClientCommands()
 
+        observeIsClientConnected()
     }
 
 
@@ -106,61 +110,119 @@ class ScanningService : Service() {
     }
 
 
-    private suspend fun observeClientCommands(){
+    private fun observeClientCommands(){
 
-        scanServer.clientCommands.collect { command ->
+        serviceScope.launch {
 
-            when(command){
-                is ClientCommands.RecoverFileSystem -> {
-                    Logger.log("ID IS : ${command.fileSystemID}")
-                }
-                is ClientCommands.StartScan -> {
+            scanServer.clientCommands.collect { command ->
 
-                }
-                is ClientCommands.StopScan -> {
-
+                when(command){
+                    is ClientCommands.RecoverFileSystem -> {
+                        Logger.log("ID IS : ${command.fileSystemID}")
+                    }
+                    is ClientCommands.StartScan -> {
+                        isToRunScanning = true
+                        launch {
+                            startScanning(command.intervalSec)
+                        }
+                    }
+                    is ClientCommands.StopScan -> {
+                        isToRunScanning = false
+                    }
                 }
             }
         }
+    }
 
 
+    private suspend fun startScanning(intervalSec : Int){
 
+        val delay = intervalSec * 1000L
+
+        while (isToRunScanning && isClientConnected){
+
+            delay(delay)
+
+            fileScanner.launchScan()?.let {  scanRes ->
+
+                scansDB.addArchive(scanRes.archive)
+
+                val responseObj = ServerResponses.NewScan(scanRes.treeScan)
+
+                val responseJson = Json.encodeToString(ServerResponses.serializer(), responseObj)
+
+                scanServer.sendJsonResponseToClient(responseJson)
+            }
+        }
     }
 
 
 
-    private fun checkMemoryUsage(){
+    private fun observeIsClientConnected(){
 
-        CoroutineScope(Dispatchers.IO).launch {
+        serviceScope.launch {
+            scanServer.isClientConnected.collectLatest { isConnected ->
 
-            val runtime = Runtime.getRuntime()
-            val activityManager = application.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            val memoryInfoArray = activityManager.getProcessMemoryInfo(intArrayOf(Process.myPid()))
-            val memoryInfo = memoryInfoArray[0]
+                isClientConnected = isConnected
 
-            while (true){
+                if(isConnected){
+                    launch {
+                        sendAllAvailableScans()
+                    }
 
-
-                val total = runtime.totalMemory() / 1048576L
-                val free = runtime.freeMemory() / 1048576L
-                val max = runtime.maxMemory() / 1048576L
-
-                Logger.log("total: $total, free: $free, max: $max")
-
-//                val usedMem = (runtime.totalMemory() - runtime.freeMemory()) / 1048576L
-//                Logger.log(usedMem.toString())
-//                val maxHeapSizeInMB = runtime.maxMemory() / 1048576L
-//                Logger.log(maxHeapSizeInMB.toString())
-//                val availHeapSizeInMB = maxHeapSizeInMB - usedMem
-//                Logger.log(availHeapSizeInMB.toString())
-
-                Logger.log("***")
-
-                Logger.log("PSS FOR :${Process.myPid()}: ${memoryInfo.totalPss}")
-
-                delay(2000)
+                    launch {
+                        sendMemoryUsageStatus()
+                    }
+                }
             }
         }
+    }
+
+
+
+    private suspend fun sendAllAvailableScans(){
+
+        val archives = scansDB.getAllArchives()
+
+        if(archives.isEmpty()) return
+
+        val treeScans = archives.mapNotNull {
+            File(it.filesTreePath).takeIf { file -> file.exists() }?.readText()
+        }
+
+        if (treeScans.isEmpty()) return
+
+        val responseObj = ServerResponses.ScansList(emptyList())
+        val responseJs = Json.encodeToString(ServerResponses.serializer(), responseObj)
+        val combinedJson = treeScans.joinToString(separator = ",", prefix = "[", postfix = "]")
+
+        val jsonList = responseJs.replace("[]", combinedJson)
+
+        scanServer.sendJsonResponseToClient(jsonList)
+
+    }
+
+
+    private suspend fun sendMemoryUsageStatus(){
+
+        val runtime = Runtime.getRuntime()
+        val activityManager = application.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val memoryInfoArray = activityManager.getProcessMemoryInfo(intArrayOf(Process.myPid()))
+        val memoryInfo = memoryInfoArray[0]
+
+
+       while (isClientConnected){
+           delay(100)
+           val max = runtime.maxMemory() / 1024L
+           val totalPSS = memoryInfo.totalPss
+           val memoryStatus = ServerResponses.MemoryStatus(
+               memoryUsageKb = totalPSS,
+               availableRamKb = max.toInt()
+           )
+
+           val jsonResponse = Json.encodeToString(ServerResponses.serializer(), memoryStatus)
+           scanServer.sendJsonResponseToClient(jsonResponse)
+       }
     }
 
 

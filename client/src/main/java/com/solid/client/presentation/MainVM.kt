@@ -25,11 +25,20 @@ class MainVM @Inject constructor(
         }
 
         viewModelScope.launch {
+            delay(5000)
+            serverConnector.startScanning(3)
+        }
+
+
+        viewModelScope.launch {
             while (true){
                 delay(2000)
-                serverConnector.startScanning()
+                serverConnector.recoverFileSystem("123")
             }
         }
+
+
+
     }
 
 
