@@ -33,9 +33,6 @@ class MainActivity : ComponentActivity() {
         }
 
 
-
-
-
         setContent {
             ChromiumBackupsTheme {
                 

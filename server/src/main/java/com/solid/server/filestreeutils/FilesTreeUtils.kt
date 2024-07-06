@@ -7,7 +7,6 @@ import com.solid.server.filescanner.ChromeFilesScanner
 import com.solid.server.utils.Logger
 
 
-
 object FilesTreeUtils {
 
     const val SEPARATOR = ' '
@@ -36,8 +35,6 @@ object FilesTreeUtils {
 
             val path = line.substring(splitIdx + 1 until line.length)
 
-            Logger.log(path)
-
             if(forArchive.contains(path)) return@forEach
 
             forArchive.add(path)
@@ -56,10 +53,12 @@ object FilesTreeUtils {
             if(status != FileStatus.OLD){
                 isTreeChanged = true
             }
-
         }
 
-        Logger.log(forArchive.size.toString())
+        forArchive.forEach{
+            Logger.log(it)
+        }
+
 
         if(isTreeChanged){
             return ChromeFilesScanner.ScanResults(
@@ -105,7 +104,6 @@ object FilesTreeUtils {
 
                 status = if(prevFile?.isFile == true){
                     if(prevFile.byteSize != byteSize) {
-                        Logger.log("$name ${prevFile.byteSize} $byteSize")
                         FileStatus.MODIFIED
                     }
                     else FileStatus.OLD

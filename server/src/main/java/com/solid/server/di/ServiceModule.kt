@@ -31,12 +31,6 @@ object ServiceModule {
 
     @Provides
     @ServiceScoped
-    fun providesShellHelper() : ShellHelper {
-        return TopWuShell()
-    }
-
-    @Provides
-    @ServiceScoped
     fun providesFileScanner(
         shellHelper: ShellHelper,
         @Named(CURRENT_FILE_SYS) fileSysPref: SharedPreferences,

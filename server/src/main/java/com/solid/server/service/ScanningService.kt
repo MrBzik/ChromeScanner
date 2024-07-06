@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.os.Debug
 import android.os.IBinder
 import android.os.Process
 import androidx.core.app.NotificationCompat
@@ -15,6 +16,7 @@ import com.solid.server.data.local.database.ScansDB
 import com.solid.server.data.remote.ScanServer
 import com.solid.server.filesarchiver.ChromeFilesArchiver
 import com.solid.server.filescanner.ChromeFilesScanner
+import com.solid.server.utils.Logger
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -51,13 +54,20 @@ class ScanningService : Service() {
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
 
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         when(intent?.action){
 
             ServiceActions.START.toString() -> start()
 
-            ServiceActions.STOP.toString() -> stopSelf()
+            ServiceActions.STOP.toString() -> {
+                serviceScope.launch {
+                    scanServer.stopServer()
+                    delay(1000)
+                    stopSelf()
+                }
+            }
 
             ServiceActions.CONFIGURE.toString() -> {
                 val port = intent.extras?.getInt(CONFIG_PORT)
@@ -93,7 +103,7 @@ class ScanningService : Service() {
         super.onCreate()
 // adb forward tcp:12345 tcp:23456
 
-        scansDB.deleteAllRows()
+//        scansDB.deleteAllRows()
 
         serviceScope.launch {
             scanServer.startServer()
@@ -148,8 +158,8 @@ class ScanningService : Service() {
 
         val delay = intervalSec * 1000L
 
-        while (isToRunScanning && isClientConnected){
-
+//        while (isToRunScanning && isClientConnected){
+        while (true){
             delay(delay)
 
             fileScanner.launchScan()?.let {  scanRes ->
@@ -202,8 +212,10 @@ class ScanningService : Service() {
 
         if (treeScans.isEmpty()) return
 
+
         val responseObj = ServerResponses.ScansList(emptyList())
         val responseJs = Json.encodeToString(ServerResponses.serializer(), responseObj)
+
         val combinedJson = treeScans.joinToString(separator = ",", prefix = "[", postfix = "]")
 
         val jsonList = responseJs.replace("[]", combinedJson)
@@ -216,17 +228,14 @@ class ScanningService : Service() {
     private suspend fun sendMemoryUsageStatus(){
 
         val runtime = Runtime.getRuntime()
-        val activityManager = application.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        val memoryInfoArray = activityManager.getProcessMemoryInfo(intArrayOf(Process.myPid()))
-        val memoryInfo = memoryInfoArray[0]
-
 
        while (isClientConnected){
            delay(100)
+
            val max = runtime.maxMemory() / 1024L
-           val totalPSS = memoryInfo.totalPss
+           val totalPSS = Debug.getPss()
            val memoryStatus = ServerResponses.MemoryStatus(
-               memoryUsageKb = totalPSS,
+               memoryUsageKb = totalPSS.toInt(),
                availableRamKb = max.toInt()
            )
 

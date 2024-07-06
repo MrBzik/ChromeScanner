@@ -12,12 +12,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.solid.client.fileutils.DrawTree
 import com.solid.client.presentation.MainVM
 import com.solid.client.ui.theme.ChromiumBackupsTheme
 import com.solid.dto.ClientCommands
+import com.solid.dto.TreeNode
 import com.solid.server.utils.Logger
 import dagger.hilt.android.AndroidEntryPoint
 import io.ktor.client.HttpClient
@@ -38,16 +42,20 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val viewModel by viewModels<MainVM>()
-        viewModel.initializeConnection()
 
 
         enableEdgeToEdge()
         setContent {
 
             ChromiumBackupsTheme {
-                Box (modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
-                    Text(text = "Hello Client!")
-                }
+
+
+                val currentTree = viewModel.currentTree.collectAsState()
+                
+                
+                DrawTree(tree = currentTree.value?.root ?: TreeNode(), Modifier.fillMaxSize().padding(vertical = 20.dp))
+
+
             }
         }
     }

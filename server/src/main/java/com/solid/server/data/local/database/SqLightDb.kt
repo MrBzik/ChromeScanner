@@ -6,7 +6,6 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.database.sqlite.SQLiteQuery
 import com.solid.server.data.local.database.entities.Archive
-import com.solid.server.utils.Logger
 
 class SqLightDb(app: Context) : SQLiteOpenHelper(app, DB_NAME, null , DB_VERSION), ScansDB{
 
@@ -42,7 +41,7 @@ class SqLightDb(app: Context) : SQLiteOpenHelper(app, DB_NAME, null , DB_VERSION
         cv.apply {
             put(ID, archive.id)
             put(FILES_ARCHIVE_PATH, archive.filesArchivePath)
-            put(FILES_TREE_PATH, archive.filesArchivePath)
+            put(FILES_TREE_PATH, archive.filesTreePath)
         }
 
         val success = db.insert(TABLE_NAME, null, cv)

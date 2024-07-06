@@ -1,7 +1,11 @@
 package com.solid.client.data.remote
 
+import com.solid.dto.ServerResponses
+import kotlinx.coroutines.flow.Flow
+
 interface ServerConnector {
 
+    val serverResponses : Flow<ServerResponses>
 
     suspend fun establishConnection()
 
@@ -9,8 +13,6 @@ interface ServerConnector {
 
     suspend fun stopScanning()
 
-    suspend fun recoverFileSystem(id : String)
-
-
+    suspend fun recoverFileSystem(id : Long)
 
 }

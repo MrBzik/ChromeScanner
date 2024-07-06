@@ -12,8 +12,16 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.readText
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.job
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -22,43 +30,26 @@ class KtorServerConnector(private val client: HttpClient) : ServerConnector {
 
     private var socket: WebSocketSession? = null
 
-
+    private val serverResponsesChannel = Channel<ServerResponses>()
+    override val serverResponses: Flow<ServerResponses> = serverResponsesChannel.receiveAsFlow()
 
     override suspend fun establishConnection() {
 
-        socket = client.webSocketSession(method = HttpMethod.Get, host = "10.0.2.2", port = 12345, path = "/connect")
+        try {
+            socket = client.webSocketSession(method = HttpMethod.Get, host = "10.0.2.2", port = 12345, path = "/connect")
+            while (true){
 
-        if(socket?.isActive == true){
+                val frame = socket?.incoming?.receive()
 
-            socket?.incoming?.consumeEach { frame ->
+                if(frame is Frame.Text){
 
-                if (frame !is Frame.Text) return@consumeEach
-
-                val responseObj = Json.decodeFromString<ServerResponses>(frame.readText())
-
-                when(responseObj){
-                    is ServerResponses.MemoryStatus -> {
-                        Logger.log("using: ${responseObj.memoryUsageKb}, available: ${responseObj.availableRamKb}")
-                    }
-                    is ServerResponses.NewScan -> {
-
-//                        printTree(
-//                            responseObj.scan.root
-//                        )
-
-                    }
-                    is ServerResponses.ScanRecoveryResults -> {
-
-
-                    }
-                    is ServerResponses.ScansList -> {
-
-                        Logger.log("GOT: ${responseObj.scansList.size}")
-
-                    }
+                    val responseObj = Json.decodeFromString<ServerResponses>(frame.readText())
+                    serverResponsesChannel.send(responseObj)
                 }
-
             }
+
+        } catch (e: Exception){
+            Logger.log(e.stackTraceToString())
         }
     }
 
@@ -81,7 +72,7 @@ class KtorServerConnector(private val client: HttpClient) : ServerConnector {
 
     }
 
-    override suspend fun recoverFileSystem(id: String) {
+    override suspend fun recoverFileSystem(id: Long) {
 
         if (socket?.isActive == false) return
 

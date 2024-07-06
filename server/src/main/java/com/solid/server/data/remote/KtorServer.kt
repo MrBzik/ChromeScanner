@@ -3,7 +3,6 @@ package com.solid.server.data.remote
 import android.content.SharedPreferences
 import com.solid.dto.ClientCommands
 import com.solid.server.data.remote.plugins.configureSockets
-import com.solid.server.utils.Logger
 import com.solid.server.utils.PORT_CONFIG
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.ApplicationEngine
@@ -23,6 +22,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.job
 import kotlinx.serialization.json.Json
+import kotlin.random.Random
 
 class KtorServer(private val portConfPrefs : SharedPreferences) : ScanServer {
 

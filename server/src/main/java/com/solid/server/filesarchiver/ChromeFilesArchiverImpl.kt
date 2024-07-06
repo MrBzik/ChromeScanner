@@ -8,6 +8,7 @@ import com.solid.server.data.local.database.entities.Archive
 import com.solid.server.filescanner.ChromeFilesScanner
 import com.solid.server.shell.ShellHelper
 import com.solid.server.utils.CURRENT_FILE_SYS
+import com.solid.server.utils.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
@@ -52,7 +53,10 @@ class ChromeFilesArchiverImpl(
 
         val filePath = app.filesDir.path + TREES_DIR +  "/" + scanResults.id + ".json"
 
-        File(filePath).writeText(filesTreeJson)
+        val file = File(filePath)
+        file.writeText(filesTreeJson)
+
+
 
         val archivePath = app.filesDir.path + ARCHIVES_DIR + "/" + scanResults.id + ".tar.gz"
 
