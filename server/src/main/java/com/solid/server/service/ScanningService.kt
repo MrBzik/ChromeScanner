@@ -158,8 +158,7 @@ class ScanningService : Service() {
 
         val delay = intervalSec * 1000L
 
-//        while (isToRunScanning && isClientConnected){
-        while (true){
+        while (isToRunScanning && isClientConnected){
             delay(delay)
 
             fileScanner.launchScan()?.let {  scanRes ->
@@ -170,6 +169,7 @@ class ScanningService : Service() {
                 serviceScope.launch {
                     val responseObj = ServerResponses.NewScan(scanRes.fileTreeScan)
                     val responseJson = Json.encodeToString(ServerResponses.serializer(), responseObj)
+                    Logger.log(responseJson)
                     scanServer.sendJsonResponseToClient(responseJson)
                 }
             }
@@ -193,6 +193,10 @@ class ScanningService : Service() {
                     launch {
                         sendMemoryUsageStatus()
                     }
+                }
+                else {
+                    // Don't resume scanning if client reconnects
+                    isToRunScanning = false
                 }
             }
         }

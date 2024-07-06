@@ -1,4 +1,4 @@
-package com.solid.server.utils
+package com.solid.client.utils
 
 import android.util.Log
 
