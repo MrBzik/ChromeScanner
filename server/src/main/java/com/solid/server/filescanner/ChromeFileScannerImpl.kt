@@ -1,6 +1,5 @@
 package com.solid.server.filescanner
 
-import android.content.Context
 import android.content.SharedPreferences
 import com.solid.dto.FileTreeScan
 import com.solid.server.data.local.database.ScansDB
@@ -11,7 +10,7 @@ import com.solid.server.utils.CURRENT_FILE_SYS
 import kotlinx.serialization.json.Json
 import java.io.File
 
-class ChromeFileScannerImpl (
+class ChromeFileScannerImpl private constructor(
     private val shell: ShellHelper,
     private val fileSysPref: SharedPreferences,
     private val db: ScansDB
@@ -50,11 +49,17 @@ class ChromeFileScannerImpl (
 
         val pids = getChromeProcPidsArg()
 
-        val target = "grep /data/data/"
+        val targetUsr = "grep /data/data/"
+        val targetRegFiles = "grep REG"
         val minusFonts = "grep -v \".ttf\""
         val minusInaccessible = "grep -v \".(deleted)\""
+        val minusLogs = "grep -v LOG"
+        val minusTempLocks = "grep -v LOCK"
+        val minusApk = "grep -v \".apk\""
 
-        val command = "lsof -p $pids | $minusFonts | $minusInaccessible | $target | while read -r cmd pid usr fd typ dev sz nd pth; do echo \$sz${SEPARATOR}\$pth; done"
+
+        val command = "lsof -p $pids | $minusFonts | $minusInaccessible | $targetUsr | $minusLogs | $minusTempLocks" +
+                " while read -r cmd pid usr fd typ dev sz nd pth; do echo \$sz${SEPARATOR}\$pth; done"
 
         val processesRes = shell.execute(command)
 
@@ -97,4 +102,60 @@ class ChromeFileScannerImpl (
         return pidsArgBuilder.toString()
 
     }
+
+
+
+
+
+    class Builder(){
+
+        private var targetUsr = false
+        private var targetReg = false
+        private var minusFonts = false
+        private var minusLogs = false
+        private var minusTempLocks = false
+        private var minusApk = false
+
+
+        fun setTargetingUserFiles(flag : Boolean) : Builder {
+            targetUsr = flag
+            return this
+        }
+
+        fun setTargetingRegFiles(flag : Boolean) : Builder {
+            targetReg = flag
+            return this
+        }
+
+        fun excludeFontFiles(flag : Boolean) : Builder {
+            minusFonts = flag
+            return this
+        }
+
+        fun excludeLogFiles(flag : Boolean) : Builder {
+            minusLogs = flag
+            return this
+        }
+
+        fun excludeTempLockFiles(flag : Boolean) : Builder {
+            minusTempLocks = flag
+            return this
+        }
+
+        fun excludeApkFiles(flag : Boolean) : Builder {
+            minusApk = flag
+            return this
+        }
+
+        fun build(){
+
+        }
+
+
+
+
+    }
+
+
+
 }

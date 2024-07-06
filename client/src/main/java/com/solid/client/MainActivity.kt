@@ -81,7 +81,7 @@ class MainActivity : ComponentActivity() {
                     lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
                         viewModel.serverArchiveRecoveryFlow.collectLatest {
                             if(it.isOngoing){
-                                navController.navigate(OngoingScanningScreen)
+                                navController.navigate(ArchiveRecoveryPage)
                                 isToShowBackArrow = true
                             }
                             if(it.message != null){
