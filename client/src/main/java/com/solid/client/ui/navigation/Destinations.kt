@@ -7,3 +7,6 @@ object OngoingScanningScreen
 
 @Serializable
 object AllScansScreen
+
+@Serializable
+object ArchiveRecoveryPage

@@ -31,11 +31,11 @@ class KtorServerConnector(private val client: HttpClient) : ServerConnector {
     private val _isScanning = MutableStateFlow(false)
     override val isScanning: StateFlow<Boolean> = _isScanning.asStateFlow()
 
-    override suspend fun establishConnection(port: String, host: String) {
+    override suspend fun establishConnection(port: Int, host: String) {
 
         try {
 
-            socket = client.webSocketSession(method = HttpMethod.Get, host = host, port = port.toInt(), path = "/connect")
+            socket = client.webSocketSession(method = HttpMethod.Get, host = host, port = port, path = "/connect")
 
             _isConnected.value = socket?.isActive ?: false
 
@@ -86,15 +86,17 @@ class KtorServerConnector(private val client: HttpClient) : ServerConnector {
 
     }
 
-    override suspend fun recoverFileSystem(id: Long) {
+    override suspend fun recoverFileSystem(id: Long) : Boolean {
 
-        if (socket?.isActive == false) return
+        if (socket?.isActive == false) return false
 
         val command = ClientCommands.RecoverFileSystem(id)
 
         val json = Json.encodeToString(ClientCommands.serializer(), command)
 
         socket?.send(Frame.Text(json))
+
+        return true
 
     }
 }

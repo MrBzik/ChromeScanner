@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.solid.client.utils.Logger
+import com.solid.dto.FileStatus
 import com.solid.dto.FileTreeScan
 import com.solid.dto.TreeNode
 import kotlinx.coroutines.flow.StateFlow
@@ -81,9 +82,7 @@ fun DrawHeader(
 
 
     Row {
-
         Text(text = "Created: $strDate | total size: $sizeKb KB | ScanTimeMLS: $scanTime")
-
     }
 
 }
@@ -111,7 +110,7 @@ fun ColumnScope.DrawTreeNodes(tree: TreeNode, offset: Int){
         val repeats = offset / 20
 
         Row (modifier = Modifier
-            .height(50.dp)
+            .height(70.dp)
             .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Start){
 
@@ -143,11 +142,23 @@ fun ColumnScope.DrawTreeNodes(tree: TreeNode, offset: Int){
                 .align(Alignment.CenterVertically))
 
             Icon(imageVector = if(u.isFile) Icons.Default.MailOutline else Icons.Default.Email,
-                contentDescription = null, modifier = Modifier.clickable {
+                contentDescription = null,
+                tint = when(u.status ){
+                    FileStatus.OLD -> Color.Black
+                    FileStatus.NEW -> Color.Green
+                    FileStatus.MODIFIED -> Color.Magenta
+                },
+                modifier = Modifier.clickable {
                     isExpanded.value = !isExpanded.value
                 })
+            
+            Spacer(modifier = Modifier.width(6.dp))
 
-            Text(text = t)
+            Column {
+                Text(text = t)
+                if(u.isFile)
+                    Text((u.byteSize / 1024).toString() + " KB")
+            }
 
         }
         if(isExpanded.value)

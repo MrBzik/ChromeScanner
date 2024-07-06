@@ -4,16 +4,21 @@ import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.solid.client.data.remote.ServerConnector
+import com.solid.client.domain.ArchiveRecoveryStatus
+import com.solid.client.domain.ConfigInputRes
 import com.solid.client.fileutils.printTree
 import com.solid.client.utils.CONFIG_HOST
 import com.solid.client.utils.CONFIG_PORT
+import com.solid.client.utils.CONFIG_SCAN_INTERVAL
 import com.solid.client.utils.Logger
 import com.solid.dto.FileTreeScan
 import com.solid.dto.ServerResponses
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -38,9 +43,16 @@ class MainVM @Inject constructor(
     val isConnectedToServer = serverConnector.isConnected
     val isScanningInProgress = serverConnector.isScanning
 
-    var currentPort = "12345"
+
+    private val serverRecoveryEventsChannel = Channel<ArchiveRecoveryStatus>()
+    val serverArchiveRecoveryFlow = serverRecoveryEventsChannel.receiveAsFlow()
+
+
+    var currentPort = 12345
         private set
     var currentHost = "10.0.2.2"
+        private set
+    var scanInterval = 10
         private set
 
     init {
@@ -59,31 +71,59 @@ class MainVM @Inject constructor(
                 serverConnector.stopScanning()
             }
             else {
-                serverConnector.startScanning(4)
+                serverConnector.startScanning(scanInterval)
             }
         }
     }
 
     fun restoreScan(id: Long) {
         viewModelScope.launch {
-            serverConnector.recoverFileSystem(id)
+            val isInWork = serverConnector.recoverFileSystem(id)
+            if(isInWork){
+                serverRecoveryEventsChannel.send(ArchiveRecoveryStatus(true, null))
+            }
         }
     }
 
     private fun getCurrentConf(){
-        currentHost = configPrefs.getString(CONFIG_HOST, "10.0.0.2") ?: "10.0.0.2"
-        currentPort = configPrefs.getString(CONFIG_PORT, "12345") ?: "12345"
+        configPrefs.apply {
+            currentHost = getString(CONFIG_HOST, "10.0.0.2") ?: "10.0.0.2"
+            currentPort = getInt(CONFIG_PORT, 12345)
+            scanInterval = getInt(CONFIG_SCAN_INTERVAL, 10)
+        }
+
     }
 
-    fun updateConfiguration(port: String, host: String){
-        configPrefs.edit().apply{
-            putString(CONFIG_PORT, port)
-            putString(CONFIG_HOST, host)
-            apply()
-            currentHost = host
-            currentPort = port
+
+    fun updateConfiguration(port: String, host: String, interval : String) : ConfigInputRes {
+        val newPort = port.toIntOrNull()
+        val newInterval = interval.toIntOrNull()
+        val isValidIp = checkHostIsValid(host)
+        if(newPort != null && newInterval != null && isValidIp){
+            configPrefs.edit().apply{
+                putInt(CONFIG_PORT, newPort)
+                putInt(CONFIG_SCAN_INTERVAL, newInterval)
+                putString(CONFIG_HOST, host)
+                currentHost = host
+                currentPort = newPort
+                scanInterval = newInterval
+                apply()
+            }
         }
+
+        return ConfigInputRes(port = newPort != null, host = isValidIp, interval = newInterval != null)
     }
+
+    private fun checkHostIsValid(string: String): Boolean {
+        val list = string.split(".")
+        if(list.size != 4) return false
+        list.forEach {
+            if(it.toIntOrNull() == null)
+                return false
+        }
+        return true
+    }
+
 
     private suspend fun connectToServer(){
         while (true){
@@ -113,8 +153,9 @@ class MainVM @Inject constructor(
 
                     }
                     is ServerResponses.ScanRecoveryResults -> {
-
-
+                        serverRecoveryEventsChannel.send(
+                            ArchiveRecoveryStatus(false, response.message)
+                        )
                     }
                     is ServerResponses.ScansList -> {
                         _scansList.update { response.scansList }

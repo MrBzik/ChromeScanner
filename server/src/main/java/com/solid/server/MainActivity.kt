@@ -8,12 +8,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.core.app.ActivityCompat
 import com.solid.server.service.CONFIG_PORT
 import com.solid.server.service.ScanningService
@@ -32,9 +37,10 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-
         setContent {
             ChromiumBackupsTheme {
+
+                val serverLogs = ScanningService.serverLogs.collectAsState()
                 
                 Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceEvenly, horizontalAlignment = Alignment.CenterHorizontally) {
                     
@@ -68,10 +74,28 @@ class MainActivity : ComponentActivity() {
                     }) {
                         Text(text = "CONFIGURE SERVER")
                     }
+
+
+                    DisplayServerLogs {
+                        serverLogs.value
+                    }
                 }
             }
         }
     }
+}
+
+
+@Composable
+fun DisplayServerLogs(
+    getLogMsg : () -> String,
+){
+
+    Box(modifier = Modifier.fillMaxWidth()){
+        Text(text = getLogMsg(), textAlign = TextAlign.Center)
+    }
+
+
 }
 
 

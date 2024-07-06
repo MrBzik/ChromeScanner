@@ -22,13 +22,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.solid.client.domain.ConfigInputRes
 
 @Composable
 fun SettingsDialog(
     onDismissRequest: () -> Unit,
-    onConfirmation: (port: String, host: String) -> Unit,
+    onConfirmation: (port: String, host: String, interval : String) -> ConfigInputRes,
     currentPort : String,
-    currentHost:  String
+    currentHost:  String,
+    scanningInterval : String
 ){
 
     val port = remember {
@@ -37,6 +39,10 @@ fun SettingsDialog(
 
     val host = remember {
         mutableStateOf(currentHost)
+    }
+
+    val scanInterval = remember {
+        mutableStateOf(scanningInterval)
     }
 
 
@@ -61,6 +67,10 @@ fun SettingsDialog(
                     port.value = it
                 }, label = "Port")
 
+                TextInputComposable(state = scanInterval, onValueChange = {
+                    scanInterval.value = it
+                }, label = "Scan interval in seconds")
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(),
@@ -73,7 +83,10 @@ fun SettingsDialog(
                         Text("Dismiss")
                     }
                     TextButton(
-                        onClick = { onConfirmation(port.value, host.value) },
+                        onClick = {
+                           val res = onConfirmation(port.value, host.value, scanInterval.value)
+                            //TO DO HIGHLIGHT
+                                  },
                         modifier = Modifier.padding(8.dp),
                     ) {
                         Text("Confirm")

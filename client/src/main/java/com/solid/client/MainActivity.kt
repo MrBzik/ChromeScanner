@@ -1,6 +1,7 @@
 package com.solid.client
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -22,7 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,20 +33,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.solid.client.presentation.MainVM
 import com.solid.client.ui.AllScansScreen
+import com.solid.client.ui.ArchiveRecoveryPage
 import com.solid.client.ui.OngoingScanningScreen
 import com.solid.client.ui.SettingsDialog
 import com.solid.client.ui.navigation.AllScansScreen
+import com.solid.client.ui.navigation.ArchiveRecoveryPage
 import com.solid.client.ui.navigation.OngoingScanningScreen
 import com.solid.client.ui.theme.ChromiumBackupsTheme
 import com.solid.dto.ServerResponses
-import com.solid.client.utils.Logger
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -64,12 +70,27 @@ class MainActivity : ComponentActivity() {
             val currentScanningTree = viewModel.currentTree.collectAsStateWithLifecycle()
             val scansList = viewModel.scansList.collectAsStateWithLifecycle()
             val isOpenSettingsDialog = remember { mutableStateOf(false) }
-
+            val lifecycleOwner = LocalLifecycleOwner.current
             ChromiumBackupsTheme {
                 val navController = rememberNavController()
-                var isInListScreen by rememberSaveable {
+                var isToShowBackArrow by rememberSaveable {
                     mutableStateOf(false)
                 }
+
+                LaunchedEffect(key1 = Unit) {
+                    lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
+                        viewModel.serverArchiveRecoveryFlow.collectLatest {
+                            if(it.isOngoing){
+                                navController.navigate(OngoingScanningScreen)
+                                isToShowBackArrow = true
+                            }
+                            if(it.message != null){
+                                Toast.makeText(this@MainActivity, it.message, Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                }
+
 
                 Scaffold(
                     topBar = {
@@ -81,9 +102,9 @@ class MainActivity : ComponentActivity() {
                         },
 
                             navigationIcon = {
-                                if(isInListScreen){
+                                if(isToShowBackArrow){
                                     IconButton(onClick = {
-                                        isInListScreen = false
+                                        isToShowBackArrow = false
                                         navController.navigate(OngoingScanningScreen)
                                     }) {
                                         Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
@@ -110,8 +131,7 @@ class MainActivity : ComponentActivity() {
                                         viewModel.toggleScanning()
                                     }
                                     ButtonType.LIST -> {
-                                        Logger.log("CLICKED?")
-                                        isInListScreen = true
+                                        isToShowBackArrow = true
                                         navController.navigate(AllScansScreen)
                                     }
                                     ButtonType.SETTINGS -> {
@@ -149,6 +169,12 @@ class MainActivity : ComponentActivity() {
                                 onItemClicked = viewModel::restoreScan
                             )
                         }
+
+                        composable<ArchiveRecoveryPage> {
+
+                            ArchiveRecoveryPage()
+
+                        }
                     }
                 }
 
@@ -156,11 +182,20 @@ class MainActivity : ComponentActivity() {
 
                     SettingsDialog(
                         onDismissRequest = { isOpenSettingsDialog.value = false},
-                        onConfirmation = { port, host ->
-                            isOpenSettingsDialog.value = false
-                            viewModel.updateConfiguration(port = port, host = host) },
-                        currentPort = viewModel.currentPort,
-                        currentHost = viewModel.currentHost
+                        onConfirmation = { port, host, interval ->
+                            val res = viewModel.updateConfiguration(port = port, host = host, interval = interval)
+                            res.takeIf {
+                                it.host && it.port && it.interval
+                            }?.let {
+                                isOpenSettingsDialog.value = false
+                            } ?: run {
+                                Toast.makeText(this@MainActivity, "Неверные данные", Toast.LENGTH_SHORT).show()
+                            }
+                            res
+                                         },
+                        currentPort = viewModel.currentPort.toString(),
+                        currentHost = viewModel.currentHost,
+                        scanningInterval = viewModel.scanInterval.toString()
                     )
                 }
             }
@@ -229,7 +264,8 @@ fun DisplayMemoryInfo(
     val mem = getMemoryInfo()
 
     Text(text = "PSS: ${mem?.memoryUsageKb ?: "?"} kb | total: ${mem?.availableRamKb ?: "?"}",
-        fontSize = 12.sp
+        fontSize = 12.sp,
+        modifier = Modifier.padding(horizontal = 10.dp)
         )
 }
 
@@ -237,10 +273,6 @@ fun DisplayMemoryInfo(
 fun DisplayConnectionStatus(
     getStatus: () -> Boolean
 ){
-
-    SideEffect {
-        Logger.log("RECOMPOSING CONNECTION STATUS")
-    }
 
     val isConnected = getStatus()
 

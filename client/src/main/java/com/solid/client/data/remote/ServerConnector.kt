@@ -10,12 +10,12 @@ interface ServerConnector {
     val isConnected : StateFlow<Boolean>
     val isScanning : StateFlow<Boolean>
 
-    suspend fun establishConnection(port: String, host: String)
+    suspend fun establishConnection(port: Int, host: String)
 
     suspend fun startScanning(intervalsSec: Int)
 
     suspend fun stopScanning()
 
-    suspend fun recoverFileSystem(id : Long)
+    suspend fun recoverFileSystem(id : Long) : Boolean
 
 }

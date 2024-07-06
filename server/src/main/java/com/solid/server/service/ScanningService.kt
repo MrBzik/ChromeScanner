@@ -22,12 +22,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.nio.charset.StandardCharsets
+import java.text.SimpleDateFormat
+import java.util.Date
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -53,6 +59,12 @@ class ScanningService : Service() {
 
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
+
+    companion object {
+
+        private val _logs = MutableStateFlow("")
+        val serverLogs = _logs.asStateFlow()
+    }
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -91,8 +103,8 @@ class ScanningService : Service() {
 
         val notification = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("Scanning in progress")
-            .addAction(0, "Stop", stopIntent)
+            .setContentTitle("Server is running")
+            .addAction(0, "Stop server", stopIntent)
             .build()
         startForeground(1, notification)
 
@@ -103,7 +115,7 @@ class ScanningService : Service() {
         super.onCreate()
 // adb forward tcp:12345 tcp:23456
 
-//        scansDB.deleteAllRows()
+        scansDB.deleteAllRows()
 
         serviceScope.launch {
             scanServer.startServer()
@@ -112,8 +124,6 @@ class ScanningService : Service() {
         observeClientCommands()
 
         observeIsClientConnected()
-
-
 
     }
 
@@ -133,9 +143,22 @@ class ScanningService : Service() {
 
                 when(command){
                     is ClientCommands.RecoverFileSystem -> {
+                        val startTime = System.currentTimeMillis()
                         val success = fileArchiver.restoreFileSystemFromArchive(command.fileSystemID)
                         if(success){
+                            val finishTime = System.currentTimeMillis()
                             fileScanner.notifyFileSystemChanged(command.fileSystemID)
+                            val responseObj = ServerResponses.ScanRecoveryResults(true, "Scan ${command.fileSystemID} is recovered successfully")
+                            val responseJson = Json.encodeToString(ServerResponses.serializer(), responseObj)
+                            scanServer.sendJsonResponseToClient(responseJson)
+                            val date = Date(finishTime)
+                            val format = SimpleDateFormat.getDateTimeInstance()
+                            val dateStr = format.format(date)
+                            val elapse = finishTime - startTime
+                            _logs.update {
+                                "Скан ${command.fileSystemID} восстановлен, $dateStr, потрачено $elapse МЛС"
+                            }
+
                         }
                     }
                     is ClientCommands.StartScan -> {
