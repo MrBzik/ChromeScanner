@@ -60,7 +60,7 @@ fun DrawTree(getTree: ()  -> FileTreeScan?, modifier: Modifier = Modifier){
 
             DrawHeader(timeStamp = tree.scanTimeStamp, sizeByte = tree.totalByteSize, scanTime = tree.scanTimeMills)
 
-            DrawTreeNodes(tree = tree.root, offset = 0, border = 0)
+            DrawTreeNodes(tree = tree.root, offset = 0, mutableSetOf())
         }
     } ?: run {
 
@@ -93,7 +93,7 @@ fun DrawHeader(
 
 
 @Composable
-fun ColumnScope.DrawTreeNodes(tree: TreeNode, offset: Int, border : Int){
+fun ColumnScope.DrawTreeNodes(tree: TreeNode, offset: Int, parentLines : MutableSet<Int>){
 
     if(tree.nodes == null) {
         return
@@ -101,15 +101,14 @@ fun ColumnScope.DrawTreeNodes(tree: TreeNode, offset: Int, border : Int){
 
     val size = tree.nodes!!.size
     var pointer = 1
+    val repeats = offset / 20
+    parentLines.add(repeats - 1)
 
     tree.nodes!!.forEach { (t, u) ->
 
         val isExpanded = remember {
             mutableStateOf(false)
         }
-
-
-        val repeats = offset / 20
 
         Row (modifier = Modifier
             .height(70.dp)
@@ -123,19 +122,17 @@ fun ColumnScope.DrawTreeNodes(tree: TreeNode, offset: Int, border : Int){
                 }
 
                 Spacer(modifier = Modifier.width(10.dp))
-                if(it >= border)
+                if(parentLines.contains(it) || isFinal)
                     Box(modifier = Modifier
                         .fillMaxHeight(if (isFinal) 0.5f else 1f)
                         .width(2.dp)
                         .background(Color.Black)
-                        .align(Alignment.Top)
-                    )
+                        .align(Alignment.Top))
                 else Spacer(modifier = Modifier.width(2.dp))
 
                 Spacer(modifier = Modifier.width(10.dp))
             }
 
-//            if(u.isFile)
             Box(modifier = Modifier
                 .offset(x = (-10).dp)
                 .height(2.dp)
@@ -163,8 +160,13 @@ fun ColumnScope.DrawTreeNodes(tree: TreeNode, offset: Int, border : Int){
             }
 
         }
-        if(isExpanded.value)
-            DrawTreeNodes(tree = u, offset = offset + 20, border = if(pointer == size) repeats else border)
+        if(isExpanded.value){
+            if(pointer == size){
+                parentLines.remove(repeats - 1)
+            }
+            DrawTreeNodes(tree = u, offset = offset + 20, parentLines = parentLines)
+        }
+
         pointer ++
     }
 
