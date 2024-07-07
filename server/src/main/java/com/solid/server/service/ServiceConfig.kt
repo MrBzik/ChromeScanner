@@ -2,7 +2,7 @@ package com.solid.server.service
 
 enum class ServiceActions {
 
-    START, STOP, CONFIGURE
+    START, STOP
 
 }
 

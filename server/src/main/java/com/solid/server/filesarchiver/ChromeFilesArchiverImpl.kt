@@ -74,15 +74,17 @@ class ChromeFilesArchiverImpl(
 
     }
 
-    override suspend fun restoreFileSystemFromArchive(archiveId: Long) : Boolean {
+    override suspend fun restoreFileSystemFromArchive(archiveId: Long) : ChromeFilesArchiver.ArchivingRes? {
 
         val isSuccess = withContext(Dispatchers.IO){
+
+            val startTime = System.currentTimeMillis()
 
             db.getArchiveById(archiveId)?.filesArchivePath?.let { path ->
 
                 val currentId = fileSysPref.getLong(CURRENT_FILE_SYS, 0)
 
-                if(currentId == archiveId) return@withContext false
+                if(currentId == archiveId) return@withContext null
 
                 val killChromeCmd = "pkill -f chrome"
 
@@ -98,10 +100,12 @@ class ChromeFilesArchiverImpl(
 
                 shell.execute(startChromeCmd)
 
-                return@withContext true
+                val finishTime = System.currentTimeMillis()
+
+                return@withContext ChromeFilesArchiver.ArchivingRes(finishTime, finishTime - startTime)
             }
 
-            return@withContext false
+            return@withContext null
         }
 
         return isSuccess

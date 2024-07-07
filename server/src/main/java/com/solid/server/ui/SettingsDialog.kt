@@ -1,4 +1,4 @@
-package com.solid.client.ui
+package com.solid.server.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,27 +20,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.solid.client.domain.ConfigInputRes
 
 @Composable
 fun SettingsDialog(
     onDismissRequest: () -> Unit,
-    onConfirmation: (port: String, host: String, interval : String) -> ConfigInputRes,
+    onConfirmation: (port: String) -> Boolean,
     currentPort : String,
-    currentHost:  String,
-    scanningInterval : String
 ){
 
     val port = remember {
         mutableStateOf(currentPort)
-    }
-
-    val host = remember {
-        mutableStateOf(currentHost)
-    }
-
-    val scanInterval = remember {
-        mutableStateOf(scanningInterval)
     }
 
 
@@ -57,17 +46,9 @@ fun SettingsDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
 
-                TextInputComposable(state = host, onValueChange = {
-                    host.value = it
-                }, label = "Host")
-
                 TextInputComposable(state = port, onValueChange = {
                     port.value = it
                 }, label = "Port")
-
-                TextInputComposable(state = scanInterval, onValueChange = {
-                    scanInterval.value = it
-                }, label = "Scan interval in seconds")
 
                 Row(
                     modifier = Modifier
@@ -82,9 +63,9 @@ fun SettingsDialog(
                     }
                     TextButton(
                         onClick = {
-                           val res = onConfirmation(port.value, host.value, scanInterval.value)
+                            val res = onConfirmation(port.value)
                             //TO DO HIGHLIGHT
-                                  },
+                        },
                         modifier = Modifier.padding(8.dp),
                     ) {
                         Text("Confirm")
@@ -108,6 +89,6 @@ fun TextInputComposable(
         label = {
             Text(text = label)
         }
-        )
+    )
 
 }

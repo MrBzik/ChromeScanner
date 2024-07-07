@@ -10,7 +10,7 @@ import com.solid.server.utils.CURRENT_FILE_SYS
 import kotlinx.serialization.json.Json
 import java.io.File
 
-class ChromeFileScannerImpl private constructor(
+class ChromeFileScannerImpl (
     private val shell: ShellHelper,
     private val fileSysPref: SharedPreferences,
     private val db: ScansDB

@@ -80,10 +80,6 @@ class ScanningService : Service() {
                     stopSelf()
                 }
             }
-
-            ServiceActions.CONFIGURE.toString() -> {
-                val port = intent.extras?.getInt(CONFIG_PORT)
-            }
         }
 
         return super.onStartCommand(intent, flags, startId)
@@ -113,9 +109,6 @@ class ScanningService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-// adb forward tcp:12345 tcp:23456
-
-        scansDB.deleteAllRows()
 
         serviceScope.launch {
             scanServer.startServer()
@@ -143,22 +136,19 @@ class ScanningService : Service() {
 
                 when(command){
                     is ClientCommands.RecoverFileSystem -> {
-                        val startTime = System.currentTimeMillis()
-                        val success = fileArchiver.restoreFileSystemFromArchive(command.fileSystemID)
-                        if(success){
-                            val finishTime = System.currentTimeMillis()
+                        fileArchiver.restoreFileSystemFromArchive(command.fileSystemID)?.let { res ->
                             fileScanner.notifyFileSystemChanged(command.fileSystemID)
-                            val responseObj = ServerResponses.ScanRecoveryResults(true, "Scan ${command.fileSystemID} is recovered successfully")
-                            val responseJson = Json.encodeToString(ServerResponses.serializer(), responseObj)
-                            scanServer.sendJsonResponseToClient(responseJson)
-                            val date = Date(finishTime)
+                            launch {
+                                val responseObj = ServerResponses.ScanRecoveryResults(true, "Scan ${command.fileSystemID} is recovered successfully")
+                                val responseJson = Json.encodeToString(ServerResponses.serializer(), responseObj)
+                                scanServer.sendJsonResponseToClient(responseJson)
+                            }
+                            val date = Date(res.timeStamp)
                             val format = SimpleDateFormat.getDateTimeInstance()
                             val dateStr = format.format(date)
-                            val elapse = finishTime - startTime
                             _logs.update {
-                                "Скан ${command.fileSystemID} восстановлен, $dateStr, потрачено $elapse МЛС"
+                                "Скан ${command.fileSystemID} восстановлен, $dateStr, потрачено ${res.durationMls} МЛС"
                             }
-
                         }
                     }
                     is ClientCommands.StartScan -> {
@@ -192,7 +182,6 @@ class ScanningService : Service() {
                 serviceScope.launch {
                     val responseObj = ServerResponses.NewScan(scanRes.fileTreeScan)
                     val responseJson = Json.encodeToString(ServerResponses.serializer(), responseObj)
-                    Logger.log(responseJson)
                     scanServer.sendJsonResponseToClient(responseJson)
                 }
             }
