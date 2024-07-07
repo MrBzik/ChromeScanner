@@ -147,10 +147,14 @@ class MainVM @Inject constructor(
                     }
                     is ServerResponses.NewScan -> {
 
-                        _currentTree.update {
+                        _currentTree.update { scan ->
+                            scan?.let {
+                                _scansList.update { scamList ->
+                                    scamList + scan
+                                }
+                            }
                             response.scan
                         }
-
                     }
                     is ServerResponses.ScanRecoveryResults -> {
                         serverRecoveryEventsChannel.send(

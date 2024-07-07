@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.filled.AccountTree
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Search
@@ -231,7 +233,7 @@ fun DrawScanningButton(
     FloatingActionButton(
         onClick = onClick,
         containerColor = if(!isConnected) Color.Gray else if(isScanning) Color.Green else Color.Red) {
-        Icon(imageVector = Icons.Default.Search, contentDescription = "Scan", tint = Color.White)
+        Icon(imageVector = Icons.Default.AccountTree, contentDescription = "Scan", tint = Color.White)
     }
 }
 
@@ -254,7 +256,7 @@ fun DrawToListButton(
     FloatingActionButton(
         onClick = onClick,
         containerColor = Color.Magenta) {
-        Icon(imageVector = Icons.Default.List, contentDescription = "All scans list", tint = Color.White)
+        Icon(imageVector = Icons.AutoMirrored.Default.ViewList, contentDescription = "All scans list", tint = Color.White)
     }
 }
 

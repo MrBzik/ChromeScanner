@@ -19,6 +19,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.FilePresent
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -140,7 +143,7 @@ fun ColumnScope.DrawTreeNodes(tree: TreeNode, offset: Int, border : Int){
                 .background(Color.Black)
                 .align(Alignment.CenterVertically))
 
-            Icon(imageVector = if(u.isFile) Icons.Default.MailOutline else Icons.Default.Email,
+            Icon(imageVector = if(u.isFile) Icons.Default.FilePresent else (if (isExpanded.value) Icons.Default.FolderOpen else Icons.Default.Folder),
                 contentDescription = null,
                 tint = when(u.status ){
                     FileStatus.OLD -> Color.Black
