@@ -11,6 +11,7 @@ import com.solid.server.shell.ShellHelper
 import com.solid.server.utils.CURRENT_FILE_SYS
 import com.solid.server.utils.Logger
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -72,19 +73,7 @@ class ChromeFilesArchiverImpl(
     }
 
 
-    override suspend fun restoreFileSystemFromArchive(archiveId: Long) : ChromeFilesArchiver.ArchivingRes? {
-
-//        val startChromeCmd = "am start -n com.android.chrome/com.google.android.apps.chrome.Main"
-//
-//        var isSuccess = shell.execute(startChromeCmd).isSuccess
-//
-//        while (!isSuccess){
-//            Logger.log("HERE")
-//            isSuccess = shell.execute(startChromeCmd).isSuccess
-//        }
-//
-//        return null
-
+    override suspend fun restoreFileSystemFromArchive(archiveId: Long) : ChromeFilesArchiver.ArchivingRes {
 
         val isSuccess = withContext(Dispatchers.IO){
 
@@ -94,7 +83,8 @@ class ChromeFilesArchiverImpl(
 
                 val currentId = repo.getCurrentFileSystemId()
 
-                if(currentId == archiveId) return@withContext null
+                if(currentId == archiveId) return@withContext ChromeFilesArchiver.ArchivingRes(0L, 0L,
+                    false, "FAIL. Same ID as current system")
 
                 val killChromeCmd = "pkill -f chrome"
 
@@ -108,18 +98,25 @@ class ChromeFilesArchiverImpl(
 
                 val startChromeCmd = "am start -n com.android.chrome/com.google.android.apps.chrome.Main"
 
-                var isSuccess = shell.execute(startChromeCmd).isSuccess
+                var attempts = 20
 
-                while (!isSuccess){
-                    isSuccess = shell.execute(startChromeCmd).isSuccess
-                }
+                do {
+                    attempts --
+                    val isSuccess = shell.execute(startChromeCmd).isSuccess
+                    delay(10)
+                } while (!isSuccess && attempts > 0)
 
                 val finishTime = System.currentTimeMillis()
 
-                return@withContext ChromeFilesArchiver.ArchivingRes(finishTime, finishTime - startTime)
+                return@withContext ChromeFilesArchiver.ArchivingRes(
+                    finishTime,
+                    finishTime - startTime,
+                    true,
+                    "Scan $archiveId is recovered successfully"
+                )
             }
 
-            return@withContext null
+            return@withContext ChromeFilesArchiver.ArchivingRes(0L, 0L, false, "FAIL. Archive was not found")
         }
 
         return isSuccess

@@ -87,7 +87,7 @@ class MainVM @Inject constructor(
 
     private fun getCurrentConf(){
         configPrefs.apply {
-            currentHost = getString(CONFIG_HOST, "10.0.0.2") ?: "10.0.0.2"
+            currentHost = getString(CONFIG_HOST, "10.0.2.2") ?: "10.0.2.2"
             currentPort = getInt(CONFIG_PORT, 12345)
             scanInterval = getInt(CONFIG_SCAN_INTERVAL, 10)
         }

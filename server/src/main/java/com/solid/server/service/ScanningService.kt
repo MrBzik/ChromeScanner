@@ -137,18 +137,23 @@ class ScanningService : Service() {
 
                 when(command){
                     is ClientCommands.RecoverFileSystem -> {
-                        fileArchiver.restoreFileSystemFromArchive(command.fileSystemID)?.let { res ->
+                        val res = fileArchiver.restoreFileSystemFromArchive(command.fileSystemID)
+                        launch {
+                            val responseObj = ServerResponses.ScanRecoveryResults(res.isSuccess, res.message)
+                            val responseJson = Json.encodeToString(ServerResponses.serializer(), responseObj)
+                            scanServer.sendJsonResponseToClient(responseJson)
+                        }
+                        if(res.isSuccess){
                             fileScanner.notifyFileSystemChanged(command.fileSystemID)
-                            launch {
-                                val responseObj = ServerResponses.ScanRecoveryResults(true, "Scan ${command.fileSystemID} is recovered successfully")
-                                val responseJson = Json.encodeToString(ServerResponses.serializer(), responseObj)
-                                scanServer.sendJsonResponseToClient(responseJson)
-                            }
                             val date = Date(res.timeStamp)
                             val format = SimpleDateFormat.getDateTimeInstance()
                             val dateStr = format.format(date)
                             _logs.update {
                                 "Скан ${command.fileSystemID} восстановлен, $dateStr, потрачено ${res.durationMls} МЛС"
+                            }
+                        } else {
+                            _logs.update {
+                                "Скан ${command.fileSystemID} не восстановлен. Причина: ${res.message}"
                             }
                         }
                     }
