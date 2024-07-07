@@ -10,6 +10,7 @@ import com.solid.server.filesarchiver.ChromeFilesArchiver
 import com.solid.server.filesarchiver.ChromeFilesArchiverImpl
 import com.solid.server.filescanner.ChromeFileScannerImpl
 import com.solid.server.filescanner.ChromeFilesScanner
+import com.solid.server.repositories.ScansRepo
 import com.solid.server.shell.ShellHelper
 import com.solid.server.shell.TopWuShell
 import com.solid.server.utils.CURRENT_FILE_SYS
@@ -33,10 +34,9 @@ object ServiceModule {
     @ServiceScoped
     fun providesFileScanner(
         shellHelper: ShellHelper,
-        @Named(CURRENT_FILE_SYS) fileSysPref: SharedPreferences,
-        db : ScansDB
+        repo: ScansRepo
     ) : ChromeFilesScanner {
-        return ChromeFileScannerImpl(shellHelper, fileSysPref, db)
+        return ChromeFileScannerImpl(shellHelper, repo)
     }
 
     @Provides
@@ -67,13 +67,22 @@ object ServiceModule {
     fun providesFileArchiver(
         @ApplicationContext app : Context,
         shellHelper: ShellHelper,
-        scansDb: ScansDB,
-        @Named(CURRENT_FILE_SYS) fileSysPref: SharedPreferences
+        repo: ScansRepo
     ) : ChromeFilesArchiver {
 
         return ChromeFilesArchiverImpl(
-            app, shellHelper, scansDb, fileSysPref
+            app, shellHelper, repo
         )
+    }
+
+    @Provides
+    @ServiceScoped
+    fun providesScansRepo(
+        db: ScansDB,
+        @Named(CURRENT_FILE_SYS) fileSysPref: SharedPreferences
+    ) : ScansRepo {
+        return ScansRepo(db, fileSysPref)
+
     }
 
 

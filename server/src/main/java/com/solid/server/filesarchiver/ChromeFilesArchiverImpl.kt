@@ -6,6 +6,7 @@ import com.solid.dto.FileTreeScan
 import com.solid.server.data.local.database.ScansDB
 import com.solid.server.data.local.database.entities.Archive
 import com.solid.server.filescanner.ChromeFilesScanner
+import com.solid.server.repositories.ScansRepo
 import com.solid.server.shell.ShellHelper
 import com.solid.server.utils.CURRENT_FILE_SYS
 import com.solid.server.utils.Logger
@@ -21,9 +22,7 @@ private const val TREES_DIR =  "/filetrees"
 class ChromeFilesArchiverImpl(
     private val app: Context,
     private val shell: ShellHelper,
-    private val db: ScansDB,
-    private val fileSysPref: SharedPreferences
-
+    private val repo: ScansRepo
 ) : ChromeFilesArchiver {
 
 
@@ -56,8 +55,6 @@ class ChromeFilesArchiverImpl(
         val file = File(filePath)
         file.writeText(filesTreeJson)
 
-
-
         val archivePath = app.filesDir.path + ARCHIVES_DIR + "/" + scanResults.id + ".tar.gz"
 
         val filesArg = scanResults.allPaths.joinToString {
@@ -70,7 +67,7 @@ class ChromeFilesArchiverImpl(
 
         val archive = Archive(id = scanResults.id, filesTreePath = filePath, filesArchivePath = archivePath)
 
-        db.addArchive(archive)
+        repo.addArchive(archive)
 
     }
 
@@ -80,9 +77,9 @@ class ChromeFilesArchiverImpl(
 
             val startTime = System.currentTimeMillis()
 
-            db.getArchiveById(archiveId)?.filesArchivePath?.let { path ->
+            repo.getArchiveById(archiveId)?.filesArchivePath?.let { path ->
 
-                val currentId = fileSysPref.getLong(CURRENT_FILE_SYS, 0)
+                val currentId = repo.getCurrentFileSystemId()
 
                 if(currentId == archiveId) return@withContext null
 
@@ -94,7 +91,7 @@ class ChromeFilesArchiverImpl(
 
                 shell.execute(unzipCmd)
 
-                fileSysPref.edit().putLong(CURRENT_FILE_SYS, archiveId).apply()
+                repo.updateCurrentFileSysId(archiveId)
 
                 val startChromeCmd = "am start -n com.android.chrome/com.google.android.apps.chrome.Main"
 

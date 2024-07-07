@@ -5,6 +5,7 @@ import com.solid.dto.FileTreeScan
 import com.solid.server.data.local.database.ScansDB
 import com.solid.server.filestreeutils.FilesTreeUtils
 import com.solid.server.filestreeutils.FilesTreeUtils.SEPARATOR
+import com.solid.server.repositories.ScansRepo
 import com.solid.server.shell.ShellHelper
 import com.solid.server.utils.CURRENT_FILE_SYS
 import kotlinx.serialization.json.Json
@@ -12,8 +13,8 @@ import java.io.File
 
 class ChromeFileScannerImpl (
     private val shell: ShellHelper,
-    private val fileSysPref: SharedPreferences,
-    private val db: ScansDB
+    private val repo: ScansRepo
+
 ) : ChromeFilesScanner {
 
     private var currentFileSystem : FileTreeScan? = null
@@ -25,16 +26,8 @@ class ChromeFileScannerImpl (
 
 
     private fun getCurrentFileSystem(id : Long? = null){
-
-        val currentSystemId = id ?: fileSysPref.getLong(CURRENT_FILE_SYS, 0)
-
-        db.getArchiveById(currentSystemId)?.let {
-
-            File(it.filesTreePath).takeIf { file -> file.exists() }?.let { file ->
-
-                currentFileSystem = Json.decodeFromString<FileTreeScan>(file.readText())
-
-            }
+        repo.getCurrentFileSystem(id)?.let {
+            currentFileSystem = it
         }
     }
 
@@ -102,60 +95,4 @@ class ChromeFileScannerImpl (
         return pidsArgBuilder.toString()
 
     }
-
-
-
-
-
-    class Builder(){
-
-        private var targetUsr = false
-        private var targetReg = false
-        private var minusFonts = false
-        private var minusLogs = false
-        private var minusTempLocks = false
-        private var minusApk = false
-
-
-        fun setTargetingUserFiles(flag : Boolean) : Builder {
-            targetUsr = flag
-            return this
-        }
-
-        fun setTargetingRegFiles(flag : Boolean) : Builder {
-            targetReg = flag
-            return this
-        }
-
-        fun excludeFontFiles(flag : Boolean) : Builder {
-            minusFonts = flag
-            return this
-        }
-
-        fun excludeLogFiles(flag : Boolean) : Builder {
-            minusLogs = flag
-            return this
-        }
-
-        fun excludeTempLockFiles(flag : Boolean) : Builder {
-            minusTempLocks = flag
-            return this
-        }
-
-        fun excludeApkFiles(flag : Boolean) : Builder {
-            minusApk = flag
-            return this
-        }
-
-        fun build(){
-
-        }
-
-
-
-
-    }
-
-
-
 }

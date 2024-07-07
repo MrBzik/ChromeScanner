@@ -16,6 +16,7 @@ import com.solid.server.data.local.database.ScansDB
 import com.solid.server.data.remote.ScanServer
 import com.solid.server.filesarchiver.ChromeFilesArchiver
 import com.solid.server.filescanner.ChromeFilesScanner
+import com.solid.server.repositories.ScansRepo
 import com.solid.server.utils.Logger
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -43,11 +44,11 @@ class ScanningService : Service() {
     @Inject
     lateinit var fileScanner : ChromeFilesScanner
     @Inject
-    lateinit var scansDB: ScansDB
-    @Inject
     lateinit var scanServer: ScanServer
     @Inject
     lateinit var fileArchiver: ChromeFilesArchiver
+    @Inject
+    lateinit var repo : ScansRepo
 
     private var isServiceRunning = false
     private var isClientConnected = false
@@ -217,27 +218,9 @@ class ScanningService : Service() {
 
 
     private suspend fun sendAllAvailableScans(){
-
-        val archives = scansDB.getAllArchives()
-
-        if(archives.isEmpty()) return
-
-        val treeScans = archives.mapNotNull {
-            File(it.filesTreePath).takeIf { file -> file.exists() }?.readText()
+        repo.getAllScansListJson()?.let {
+            scanServer.sendJsonResponseToClient(it)
         }
-
-        if (treeScans.isEmpty()) return
-
-
-        val responseObj = ServerResponses.ScansList(emptyList())
-        val responseJs = Json.encodeToString(ServerResponses.serializer(), responseObj)
-
-        val combinedJson = treeScans.joinToString(separator = ",", prefix = "[", postfix = "]")
-
-        val jsonList = responseJs.replace("[]", combinedJson)
-
-        scanServer.sendJsonResponseToClient(jsonList)
-
     }
 
 
