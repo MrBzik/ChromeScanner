@@ -52,7 +52,7 @@ class KtorServerConnector(private val client: HttpClient) : ServerConnector {
             }
 
         } catch (e: Exception){
-//            Logger.log(e.stackTraceToString())
+            Logger.log(e.stackTraceToString())
             _isConnected.value = false
             _isScanning.value = false
         }

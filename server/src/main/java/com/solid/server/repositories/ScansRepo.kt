@@ -58,6 +58,11 @@ class ScansRepo (
     fun getArchiveById(id: Long) = db.getArchiveById(id)
 
 
+    fun clearArchives(){
+        db.deleteAllRows()
+    }
+
+
     fun getCurrentFileSystemId() = fileSysPref.getLong(CURRENT_FILE_SYS, 0)
 
     fun updateCurrentFileSysId(id: Long){

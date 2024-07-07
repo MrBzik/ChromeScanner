@@ -71,7 +71,20 @@ class ChromeFilesArchiverImpl(
 
     }
 
+
     override suspend fun restoreFileSystemFromArchive(archiveId: Long) : ChromeFilesArchiver.ArchivingRes? {
+
+//        val startChromeCmd = "am start -n com.android.chrome/com.google.android.apps.chrome.Main"
+//
+//        var isSuccess = shell.execute(startChromeCmd).isSuccess
+//
+//        while (!isSuccess){
+//            Logger.log("HERE")
+//            isSuccess = shell.execute(startChromeCmd).isSuccess
+//        }
+//
+//        return null
+
 
         val isSuccess = withContext(Dispatchers.IO){
 
@@ -95,7 +108,11 @@ class ChromeFilesArchiverImpl(
 
                 val startChromeCmd = "am start -n com.android.chrome/com.google.android.apps.chrome.Main"
 
-                shell.execute(startChromeCmd)
+                var isSuccess = shell.execute(startChromeCmd).isSuccess
+
+                while (!isSuccess){
+                    isSuccess = shell.execute(startChromeCmd).isSuccess
+                }
 
                 val finishTime = System.currentTimeMillis()
 

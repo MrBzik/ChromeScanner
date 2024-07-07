@@ -12,7 +12,7 @@ class TopWuShell : ShellHelper {
         )
     }
 
-    override fun execute(command: String): List<String> {
+    override fun execute(command: String): Shell.Result {
 
 
         val exec =  Shell.cmd(command).exec()
@@ -20,6 +20,6 @@ class TopWuShell : ShellHelper {
             Logger.log(it)
         }
 
-        return exec.out
+        return exec
     }
 }

@@ -145,7 +145,7 @@ fun ColumnScope.DrawTreeNodes(tree: TreeNode, offset: Int, border : Int){
 
             Icon(imageVector = if(u.isFile) Icons.Default.FilePresent else (if (isExpanded.value) Icons.Default.FolderOpen else Icons.Default.Folder),
                 contentDescription = null,
-                tint = when(u.status ){
+                tint = when(u.status){
                     FileStatus.OLD -> Color.Black
                     FileStatus.NEW -> Color.Green
                     FileStatus.MODIFIED -> Color.Magenta

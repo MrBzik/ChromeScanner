@@ -55,7 +55,7 @@ class ChromeFileScannerImpl (
         val command = "lsof -p $pids | $minusFonts | $minusInaccessible | $targetUsr | $minusLogs | $minusTempLocks | " +
                 "while read -r cmd pid usr fd typ dev sz nd pth; do echo \$sz${SEPARATOR}\$pth; done"
 
-        val processesRes = shell.execute(command)
+        val processesRes = shell.execute(command).out
 
         if(processesRes.isEmpty()) return null
 
@@ -86,7 +86,7 @@ class ChromeFileScannerImpl (
         val pidsRes = shell.execute(commandToGetProcIds)
 
 
-        pidsRes.forEach { pid ->
+        pidsRes.out.forEach { pid ->
             pidsArgBuilder
                 .append(pid)
                 .append(",")
