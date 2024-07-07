@@ -80,7 +80,7 @@ class MainVM @Inject constructor(
         viewModelScope.launch {
             val isInWork = serverConnector.recoverFileSystem(id)
             if(isInWork){
-                serverRecoveryEventsChannel.send(ArchiveRecoveryStatus(true, null))
+                serverRecoveryEventsChannel.send(ArchiveRecoveryStatus(true, "На сервере идёт процесс восстановления скана"))
             }
         }
     }

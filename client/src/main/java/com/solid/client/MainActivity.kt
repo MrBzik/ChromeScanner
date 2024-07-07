@@ -71,6 +71,9 @@ class MainActivity : ComponentActivity() {
             val scansList = viewModel.scansList.collectAsStateWithLifecycle()
             val isOpenSettingsDialog = remember { mutableStateOf(false) }
             val lifecycleOwner = LocalLifecycleOwner.current
+            val recoveryMessage = remember {
+                mutableStateOf("")
+            }
             ChromiumBackupsTheme {
                 val navController = rememberNavController()
                 var isToShowBackArrow by rememberSaveable {
@@ -84,9 +87,8 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate(ArchiveRecoveryPage)
                                 isToShowBackArrow = true
                             }
-                            if(it.message != null){
-                                Toast.makeText(this@MainActivity, it.message, Toast.LENGTH_LONG).show()
-                            }
+                            recoveryMessage.value = it.message
+                            Toast.makeText(this@MainActivity, it.message, Toast.LENGTH_LONG).show()
                         }
                     }
                 }
@@ -172,7 +174,7 @@ class MainActivity : ComponentActivity() {
 
                         composable<ArchiveRecoveryPage> {
 
-                            ArchiveRecoveryPage()
+                            ArchiveRecoveryPage { recoveryMessage.value }
 
                         }
                     }

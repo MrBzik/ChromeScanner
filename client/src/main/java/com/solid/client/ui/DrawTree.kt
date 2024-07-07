@@ -57,7 +57,7 @@ fun DrawTree(getTree: ()  -> FileTreeScan?, modifier: Modifier = Modifier){
 
             DrawHeader(timeStamp = tree.scanTimeStamp, sizeByte = tree.totalByteSize, scanTime = tree.scanTimeMills)
 
-            DrawTreeNodes(tree = tree.root, offset = 0)
+            DrawTreeNodes(tree = tree.root, offset = 0, border = 0)
         }
     } ?: run {
 
@@ -90,10 +90,9 @@ fun DrawHeader(
 
 
 @Composable
-fun ColumnScope.DrawTreeNodes(tree: TreeNode, offset: Int){
+fun ColumnScope.DrawTreeNodes(tree: TreeNode, offset: Int, border : Int){
 
     if(tree.nodes == null) {
-
         return
     }
 
@@ -121,7 +120,7 @@ fun ColumnScope.DrawTreeNodes(tree: TreeNode, offset: Int){
                 }
 
                 Spacer(modifier = Modifier.width(10.dp))
-                if(isFinal)
+                if(it >= border)
                     Box(modifier = Modifier
                         .fillMaxHeight(if (isFinal) 0.5f else 1f)
                         .width(2.dp)
@@ -162,11 +161,8 @@ fun ColumnScope.DrawTreeNodes(tree: TreeNode, offset: Int){
 
         }
         if(isExpanded.value)
-            DrawTreeNodes(tree = u, offset = offset + 20)
-
-
+            DrawTreeNodes(tree = u, offset = offset + 20, border = if(pointer == size) repeats else border)
         pointer ++
-
     }
 
 

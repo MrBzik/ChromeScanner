@@ -3,9 +3,10 @@ package com.solid.client.ui
 import androidx.compose.runtime.Composable
 
 @Composable
-fun ArchiveRecoveryPage(){
+fun ArchiveRecoveryPage(
+    getMessage : () -> String
+){
 
-    OnEmptyResults(message = "На сервере идёт процесс восстановления скана")
-
+    OnEmptyResults(message = getMessage())
 
 }

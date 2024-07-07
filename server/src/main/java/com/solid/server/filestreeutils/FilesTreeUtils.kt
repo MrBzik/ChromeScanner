@@ -55,11 +55,6 @@ object FilesTreeUtils {
             }
         }
 
-        forArchive.forEach{
-            Logger.log(it)
-        }
-
-
         if(isTreeChanged){
             return ChromeFilesScanner.ScanResults(
                 fileTreeScan = FileTreeScan(

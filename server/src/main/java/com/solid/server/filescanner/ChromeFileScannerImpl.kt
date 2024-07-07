@@ -8,6 +8,7 @@ import com.solid.server.filestreeutils.FilesTreeUtils.SEPARATOR
 import com.solid.server.repositories.ScansRepo
 import com.solid.server.shell.ShellHelper
 import com.solid.server.utils.CURRENT_FILE_SYS
+import com.solid.server.utils.Logger
 import kotlinx.serialization.json.Json
 import java.io.File
 
@@ -51,8 +52,8 @@ class ChromeFileScannerImpl (
         val minusApk = "grep -v \".apk\""
 
 
-        val command = "lsof -p $pids | $minusFonts | $minusInaccessible | $targetUsr | $minusLogs | $minusTempLocks" +
-                " while read -r cmd pid usr fd typ dev sz nd pth; do echo \$sz${SEPARATOR}\$pth; done"
+        val command = "lsof -p $pids | $minusFonts | $minusInaccessible | $targetUsr | $minusLogs | $minusTempLocks | " +
+                "while read -r cmd pid usr fd typ dev sz nd pth; do echo \$sz${SEPARATOR}\$pth; done"
 
         val processesRes = shell.execute(command)
 

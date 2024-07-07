@@ -183,6 +183,7 @@ class ScanningService : Service() {
                 serviceScope.launch {
                     val responseObj = ServerResponses.NewScan(scanRes.fileTreeScan)
                     val responseJson = Json.encodeToString(ServerResponses.serializer(), responseObj)
+                    Logger.log(responseJson)
                     scanServer.sendJsonResponseToClient(responseJson)
                 }
             }
